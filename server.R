@@ -1,5 +1,22 @@
 shinyServer(function(input, output) {
   
+  # call the logout module with reactive trigger to hide/show
+  logout_init <- callModule(shinyauthr::logout, 
+                            id = "logout", 
+                            active = reactive(credentials()$user_auth))
+  
+  # call login module supplying data frame, user and password cols
+  # and reactive trigger
+  credentials <- callModule(shinyauthr::login, 
+                            id = "login", 
+                            data = user_base,
+                            user_col = user,
+                            pwd_col = password,
+                            log_out = reactive(logout_init()))
+  
+  # pulls out the user information returned from login module
+  user_data <- reactive({credentials()$info})
+  
   get_df <- reactive({
     
     req(input$file1)

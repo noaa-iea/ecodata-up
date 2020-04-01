@@ -49,6 +49,14 @@ shinyUI(fluidPage(
     # Main panel for displaying outputs ----
     mainPanel(
       
+      shinyjs::useShinyjs(),
+      
+      # add logout button UI 
+      div(class = "pull-right", logoutUI(id = "logout")),
+      
+      # add login panel UI function
+      loginUI(id = "login"),
+      
       # Output: Data file ----
       tableOutput("tbl"),
       
