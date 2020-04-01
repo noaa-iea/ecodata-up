@@ -9,6 +9,7 @@ library(ggplot2)
 library(plyr)
 library(shinyauthr) # remotes::install_github("paulc91/shinyauthr")
 library(shinyjs)
+library(shinydashboard)
 
 # dataframe that holds usernames, passwords and other user data
 user_base <- data.frame(

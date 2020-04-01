@@ -1,4 +1,5 @@
 shinyServer(function(input, output) {
+  addClass(selector = "body", class = "sidebar-collapse")
   
   # call the logout module with reactive trigger to hide/show
   logout_init <- callModule(shinyauthr::logout, 
