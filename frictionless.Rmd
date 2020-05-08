@@ -1,0 +1,40 @@
+---
+title: "frictionless metadata entry"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+- [github.com/datasets](https://github.com/datasets)
+- [Creating Data Packages in R | Frictionless Data](https://frictionlessdata.io/blog/2018/02/14/creating-tabular-data-packages-in-r/)
+
+```{r, eval=F}
+library(datapackage.r) #remotes::install_github("frictionlessdata/datapackage-r")
+
+# enter basic title
+dataPackage = Package.load()
+dataPackage$descriptor['name'] = 'slopewater_proportions'
+dataPackage$descriptor['title'] = 'Slopewater Proportions'
+# commit the changes to Package class
+dataPackage$commit()
+
+# infer csv schema
+filepath = 'https://raw.githubusercontent.com/marinebon/ecodata/master/data-raw/slopewater_proportions.csv'
+schema = tableschema.r::infer(filepath)
+
+# define resources using list object
+resources = list(list(
+  name = "data",
+  path = filepath,
+  schema = schema))
+
+# add resources to the data package
+dataPackage$addResource(resources)
+
+# write our datapackage.json
+setwd(here::here("data"))
+dataPackage$save('slopewater_proportions')
+```
+

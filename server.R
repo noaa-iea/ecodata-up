@@ -1,22 +1,47 @@
 shinyServer(function(input, output) {
   addClass(selector = "body", class = "sidebar-collapse")
   
-  # call the logout module with reactive trigger to hide/show
-  logout_init <- callModule(shinyauthr::logout, 
-                            id = "logout", 
-                            active = reactive(credentials()$user_auth))
+  # Call secure_server() with DB info
+  # its' an example, don't put password in clear like that
+  auth_out <- shinymanager::secure_server(
+    check_credentials = check_credentials(
+      db         = users_db,
+      passphrase = "supersecret"))
+  # ,
+  #   timeout = 0,
+  #   inputs_list = list(
+  #     group = list(
+  #       fun = "selectInput",
+  #       args = list(
+  #         choices = c("all", "restricted"),
+  #         multiple = TRUE,
+  #         selected = c("all", "restricted")))))
   
-  # call login module supplying data frame, user and password cols
-  # and reactive trigger
-  credentials <- callModule(shinyauthr::login, 
-                            id = "login", 
-                            data = user_base,
-                            user_col = user,
-                            pwd_col = password,
-                            log_out = reactive(logout_init()))
+  # observe({
+  #   print(input$shinymanager_where)
+  #   print(input$shinymanager_language)
+  # })
+  # 
+  # output$res_auth <- renderPrint({
+  #   reactiveValuesToList(auth_out)
+  # })
   
-  # pulls out the user information returned from login module
-  user_data <- reactive({credentials()$info})
+  # # call the logout module with reactive trigger to hide/show
+  # logout_init <- callModule(shinyauthr::logout, 
+  #                           id = "logout", 
+  #                           active = reactive(credentials()$user_auth))
+  # 
+  # # call login module supplying data frame, user and password cols
+  # # and reactive trigger
+  # credentials <- callModule(shinyauthr::login, 
+  #                           id = "login", 
+  #                           data = user_base,
+  #                           user_col = user,
+  #                           pwd_col = password,
+  #                           log_out = reactive(logout_init()))
+  # 
+  # # pulls out the user information returned from login module
+  # user_data <- reactive({credentials()$info})
   
   get_df <- reactive({
     

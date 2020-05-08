@@ -19,3 +19,6 @@ Initially, using:
   * [other/Rmd/process_raw.Rmd](https://github.com/NOAA-EDAB/ecodata/blob/ed64ae5d37bdc4b4b97f07b42a0d8f6b6dbf7c16/other/Rmd/process_raw.Rmd#L300-L323): table, contributor
   * [docs/LTL.Rmd](https://github.com/NOAA-EDAB/ecodata/blob/924f417238da1b24a8a372109da2981af7507b40/docs/LTL.Rmd#L967-L996): table, plot
   
+  
+  
+- https://github.com/nanxstats/awesome-shiny-extensions
