@@ -1,48 +1,48 @@
-# source: https://shiny.rstudio.com/gallery/file-upload.html
-
 library(shiny)
+library(shinydashboard)
+library(shinydashboardPlus)
+library(shinymanager)
 library(here)
+library(lubridate)
+library(readr)
+library(stringr)
 library(dplyr)
 library(tidyr)
-library(knitr)
-library(readr)
-library(kableExtra)
-library(ggplot2)
-#library(plyr)
+library(tibble)
+library(purrr)
+library(DT)
 library(shinyjs)
-library(shinydashboard)
-library(ecodata)
-#library(shinyauthr) # remotes::install_github("paulc91/shinyauthr")
-library(shinymanager) # remotes::install_github("datastorm-open/shinymanager")
 
-datasets_csv <- "https://docs.google.com/spreadsheets/d/1ULxD4yIl1Mb189Q6d1iRy0cKdfd_B4XRvz1m4ad52Y4/gviz/tq?tqx=out:csv&sheet=0"
-#users_db     <- here("data/users.sqlite")
-users_db     <- "/Users/bbest/github/iea-uploader/test_shinymanager/credentials.sqlite"
+users_sqlite <- here("data/users.sqlite")
 
-if (!file.exists(users_db)){
+datasets <- list(
+  name      = "SOE 2020 Contributors (copy 2020-04-24)",
+  url_csv   = "https://docs.google.com/spreadsheets/d/1ULxD4yIl1Mb189Q6d1iRy0cKdfd_B4XRvz1m4ad52Y4/gviz/tq?tqx=out:csv&sheet=0",
+  url_edit  = "https://docs.google.com/spreadsheets/d/1ULxD4yIl1Mb189Q6d1iRy0cKdfd_B4XRvz1m4ad52Y4/edit",
+  local_csv = "data/datasets.csv")
+
+if (!file.exists(users_sqlite)){
   
   users <- tribble(
-    ~user     , ~password, ~start      , ~expire     , ~admin, ~comment         ,
-    "user1"   , "pass1"  , "2019-04-15", NA          , F     , "user example"   ,
-    "manager1", "pass1"  , NA          , "2020-12-31", T     , "manager example")
-  # users <- tribble(
-  #   ~user     , ~password, ~admin, ~comment         ,
-  #   "user1"   , "pass1"  , F     , "user example"   ,
-  #   "manager1", "pass1"  , T     , "manager example")
+    ~user, ~password,        ~start,       ~expire, ~admin,          ~comment,
+    "bb",         "",  "2019-04-15",  "2020-12-31",      F,    "user example",
+    "mgr",     "pwd",  "2019-04-15",            NA,      T, "manager example") %>% 
+    as.data.frame()
   
-  shinymanager::create_db(
+  create_db(
     credentials_data = users,
-    sqlite_path      = users_db,
-    passphrase       = "supersecret")
+    sqlite_path = users_sqlite,
+    passphrase = "supersecret")
 }
 
-shinymanager::set_labels(
-  language = "en",
-  "Please authenticate" = "Please login",
-  "Username:" = "Username:",
-  "Password:" = "Password:"
-)
+if (!file.exists(datasets$local_csv)){
+  read_csv(datasets$url_csv) %>% 
+    write_csv(datasets$local_csv)
+}
+datasets <- read_csv(datasets$local_csv)
 
-# datasets
-datasets <- read_csv(datasets_csv)
-
+# get_datasets_local <- reactiveFileReader(
+#   intervalMillis = 1000,  
+#   NULL,
+#   filePath = datasets$local_csv,
+#   readFunc = read_csv)

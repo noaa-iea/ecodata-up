@@ -1,115 +1,89 @@
-shinyServer(function(input, output) {
-  addClass(selector = "body", class = "sidebar-collapse")
+server <- function(input, output, session) {
   
-  # Call secure_server() with DB info
-  # its' an example, don't put password in clear like that
-  auth_out <- shinymanager::secure_server(
+  # call the server part
+  # check_credentials returns a function to authenticate users
+  auth_out <- secure_server(
     check_credentials = check_credentials(
-      db         = users_db,
-      passphrase = "supersecret"))
-  # ,
-  #   timeout = 0,
-  #   inputs_list = list(
-  #     group = list(
-  #       fun = "selectInput",
-  #       args = list(
-  #         choices = c("all", "restricted"),
-  #         multiple = TRUE,
-  #         selected = c("all", "restricted")))))
+      db         = users_sqlite,
+      passphrase = "supersecret"), 
+    timeout = 0, 
+    inputs_list = list(
+      group = list(
+        fun = "selectInput",
+        args = list(
+          choices = c("alls", "restricted"),
+          multiple = TRUE,
+          selected = c("all", "restricted")))))
   
-  # observe({
-  #   print(input$shinymanager_where)
-  #   print(input$shinymanager_language)
+  output$auth_output <- renderPrint({
+    reactiveValuesToList(auth_out)
+  })
+  
+  rv <- reactiveValues(
+    datasets = datasets)
+  
+  output$dt_datasets <- DT::renderDataTable({
+    req(auth_out)
+    req(auth_out$user)
+    # auth_out$user
+    #usr <- "bbest"
+    d <- rv[["datasets"]] %>% 
+      mutate(
+        editor = str_split(`Uploader Editors`, " ")) %>% 
+      unnest(editor) %>% 
+      filter(editor == auth_out$user)
+
+    d #, options = list(lengthChange = FALSE))
+  }, 
+  selection = "single", 
+  editable  = T,
+  style     = "bootstrap", 
+  rownames  = F,
+  server    = F,
+  options   = list(
+    pageLength = Inf, 
+    #dom        = 't',
+    searching  = F, 
+    bPaginate  = F, 
+    info       = F))
+  
+  proxy_datasets <- dataTableProxy("dt_datasets")
+  
+  # edit cell
+  observeEvent(input$dt_datasets_cell_edit, {
+    info <- input$dt_datasets_cell_edit
+    i <- info$row
+    j <- info$col #+ 1L  # column index offset by 1
+    v <- info$value
+    rv[["datasets"]][i, j] <- coerceValue(v, rv[["datasets"]][i, j])
+    replaceData(proxy_datasets, rv[["datasets"]], resetPaging = F, rownames = F)  # important
+  })
+
+  # delete row
+  observe({
+    toggle("delete_datasets_row", condition = nrow(rv[["datasets"]]) > 0 & !is.null(input$dt_datasets_rows_selected))
+  })
+  observeEvent(input$delete_datasets_row,{
+    req(input$dt_datasets_rows_selected)
+    i <- input$dt_datasets_rows_selected
+    rv[["datasets"]] <- rv[["datasets"]][-i,]
+    replaceData(proxy_datasets, rv[["datasets"]], resetPaging = F, rownames = F)  # important
+  })
+  
+  # add row
+  observeEvent(input$add_teams_row,{
+    #addRow() only works when server = FALSE
+    req(rv[["datasets"]])
+    
+    # update all of the relevant tables
+    ti <- nrow(rv[["datasets"]]) + 1L
+    #rv[["datasets"]][ti,] <- list(tid, sample(ex_seasons, 1), sample(ex_leagues, 1), sample(ex_coaches, 1))
+    rv[["datasets"]][ti,] <- names(rv[["datasets"]]) %>% as.list()
+    replaceData(proxy_datasets, rv[["datasets"]], resetPaging = F, rownames = F)  # important
+  })
+  
+  # observeEvent(input$btn_newdataset, {
+  #   
   # })
-  # 
-  # output$res_auth <- renderPrint({
-  #   reactiveValuesToList(auth_out)
-  # })
-  
-  # # call the logout module with reactive trigger to hide/show
-  # logout_init <- callModule(shinyauthr::logout, 
-  #                           id = "logout", 
-  #                           active = reactive(credentials()$user_auth))
-  # 
-  # # call login module supplying data frame, user and password cols
-  # # and reactive trigger
-  # credentials <- callModule(shinyauthr::login, 
-  #                           id = "login", 
-  #                           data = user_base,
-  #                           user_col = user,
-  #                           pwd_col = password,
-  #                           log_out = reactive(logout_init()))
-  # 
-  # # pulls out the user information returned from login module
-  # user_data <- reactive({credentials()$info})
-  
-  get_df <- reactive({
     
-    req(input$file1)
-    
-    inFile <- input$file1
-    # if (is.null(inFile))
-    #   return(NULL)
-    
-    # when reading semicolon separated files,
-    # having a comma separator causes `read.csv` to error
-    tryCatch(
-      {
-        df <- read.csv(input$file1$datapath,
-                       header = input$header,
-                       sep = input$sep,
-                       quote = input$quote)
-      },
-      error = function(e) {
-        # return a safeError if a parsing error occurs
-        stop(safeError(e))
-      }
-    )
-    
-    df
-  })
-  
-  output$tbl <- renderTable({
-    
-    # input$file1 will be NULL initially. After the user selects
-    # and uploads a file, head of that data file by default,
-    # or all rows if selected, will be shown.
-    req(input$file1)
-    
-    df <- get_df()
-    
-    # TODO: head
-    if(input$disp == "head") {
-      return(head(df))
-    }
-    else {
-      return(df)
-    }
-    
-  })
-  
-  output$fig <- renderPlot({
-    df <- get_df()
-    
-    slopewater <- df %>%
-      dplyr::rename(Time = year, Var = water.mass.flavor, Value = prop) %>% 
-      mutate(EPU = "GOM", Units = "unitless", Var2 = "proportion ne channel") %>% 
-      unite(.,Var,c(Var,Var2), sep = " ")
-    
-    slopewater %>% 
-      mutate(Var, Var = plyr::mapvalues(Var, from = c("WSW proportion ne channel",
-                                                      "LSLW proportion ne channel"),
-                                        to = c("WSW","LSLW"))) %>% 
-      dplyr::rename(Flavor  = Var) %>% 
-      ggplot() +
-      geom_line(aes(x = Time, y = Value, color = Flavor))+
-      geom_point(aes(x = Time, y = Value, color = Flavor)) +
-      ylab("Percent of Total Slopewater") +
-      ggtitle("Slopewater Proportions in NE Channel")+
-      theme_bw()+
-      theme(strip.background = element_blank())
-    
-  })
-  
-  
-})
+}
