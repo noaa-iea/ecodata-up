@@ -1,0 +1,7 @@
+.kable td, th { 
+  padding: 5px;
+}
+
+.shiny-output-error-validation {
+  color: red;
+}

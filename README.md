@@ -2,6 +2,30 @@
 
 Shiny app for dataset uploading, checking and visualization
 
+## setup
+
+From admin@rstudio.iea-demo.us in Terminal:
+
+```bash
+
+# git clone
+cd /share/github
+git clone https://github.com/bbest/ecodata.git
+git clone https://github.com/marinebon/iea-uploader.git
+
+# turn off git tracking of chmod
+cd /share/github/ecodata; git config core.fileMode false
+cd /share/github/iea-uploader; git config core.fileMode false
+
+# chmod so shiny app can edit
+cd /share/github; sudo chmod -R 777 ecodata
+cd /share/github/iea-uploader; sudo chmod -R 777 data; sudo chmod -R 777 www
+
+# revert git changes
+cd /share/github/ecodata; git reset; git checkout .
+```
+
+
 ## initial dataset test
 
 Initially, using:

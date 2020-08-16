@@ -12,8 +12,10 @@ shelf(
   # tidyverse
   readr,dplyr,tidyr,
   # report
-  rmarkdown,DT,
-  # packages used by ecodata:chunk-scripts/*-setup.R
+  knitr,rmarkdown,DT,
+  # package
+  devtools,
+  # ecodata:chunk-scripts/*-setup.R
   colorRamps,
   cowplot,
   dplyr,
@@ -32,7 +34,11 @@ shelf(
   sf,
   stringr,
   tidyr,
-  vegan)
+  vegan,
+  # ecodata::StatGLS()
+  magrittr,
+  AICcmodavg,
+  nlme)
 
 options(shiny.maxRequestSize = 30*1024^2) # 30MB limit
 
@@ -52,8 +58,10 @@ ui <- tagList(
     tags$meta(name="google-signin-client_id", content="596429062120-tbgia6e94mtqc8eoo27iqqd7l89s6apr.apps.googleusercontent.com"),
     HTML('<script src="https://apis.google.com/js/platform.js?onload=init"></script>'),
     includeScript("signin.js"),
+    tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
     useShinyjs()
   ),
+  
   navbarPage(
     id = "tabs",
     title = "IEA Uploader",
@@ -111,7 +119,7 @@ ui <- tagList(
               condition = "((input.g_id !== null) && (input.dt_datasets_rows_selected.length == 0))",
               "Please first select a dataset row in step", strong("2. Select")),
             conditionalPanel(
-              condition = "input.dt_datasets_rows_selected.length > 0",
+              condition = "((input.g_id !== null) && (input.dt_datasets_rows_selected.length > 0))",
               fileInput(
                 "inFile", "Choose File(s)",
                 multiple = T,
@@ -120,7 +128,8 @@ ui <- tagList(
                   "text/comma-separated-values,text/plain",
                   ".csv")))),
           mainPanel(
-            plotOutput("fig"),
+            uiOutput("uiUploadSuggestion"),
+            uiOutput("figs"),
             DTOutput("tbl"))))
   ))
 
@@ -131,8 +140,30 @@ server <- function(input, output, session) {
   output$g_image = renderUI({ img(src=input$g_image) })
   output$row_sel = renderText(input$dt_datasets_rows_selected)
   
-  values <- reactiveValues()
-  values$load_success <- F
+  values <- reactiveValues(
+    load_success = F,
+    plot_success = F,
+    upload_state = NULL)
+  
+  observeEvent(input$inFile, {
+    values$upload_state <- 'uploaded'
+  })
+  
+  observeEvent(input$dt_datasets_rows_selected, {
+    values$load_success <- F
+    values$plot_success <- F
+    values$upload_state <- 'reset'
+  })
+  
+  file_input <- reactive({
+    if (is.null(values$upload_state)) {
+      return(NULL)
+    } else if (values$upload_state == 'uploaded') {
+      return(input$inFile)
+    } else if (values$upload_state == 'reset') {
+      return(NULL)
+    }
+  })
   
   observeEvent(input$btnNextSelect, {
     updateTabsetPanel(session, "tabs", selected = "2. Select")
@@ -142,7 +173,7 @@ server <- function(input, output, session) {
     updateTabsetPanel(session, "tabs", selected = "3. Upload")
   })
   
-  output$dt_datasets <- DT::renderDataTable({
+  output$dt_datasets <- renderDataTable({
     req(input$g_email)
 
     read_csv(datasets$url_csv) %>% 
@@ -164,7 +195,6 @@ server <- function(input, output, session) {
   get_dataset <- reactive({
     req(input$dt_datasets_rows_selected)
     
-    values$load_success <- F
     
     read_csv(datasets$url_csv) %>% 
       mutate(
@@ -175,64 +205,173 @@ server <- function(input, output, session) {
       slice(input$dt_datasets_rows_selected)
   })
   
-  get_data <- reactive({
-    req(input$inFile)
-    
-    dataset <- get_dataset()
+  output$uiUploadSuggestion <- renderUI({
+    show_suggestion = !is.null(input$g_id) & length(input$dt_datasets_rows_selected) == 1 && !values$load_success
+    message(glue("show_suggestion: {show_suggestion}"))
+    if (show_suggestion){
+      dataset <- get_dataset()
+      
+      files     <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
+      is_files  <- ifelse(length(files) > 1, T, F)
+      file1_csv <- glue("{dir_ecodata}/data-raw/{files[1]}")
+      
+      file_url_pfx <- "https://github.com/NOAA-EDAB/ecodata/blob/master/data-raw"
+      file_links   <- lapply(files, function(f) a(f, href = glue("{file_url_pfx}/{f}.csv"))) %>% tagList()
+
+      get_preview <- function(){
+        if (!file.exists(file1_csv)) return("")
+        tagList(
+          ifelse(is_files, "They", "It"), "should have header names and values like",
+          ifelse(is_files, glue("this ({basename(file1_csv)}):"), "this:"), br(),
+          read_csv(file1_csv) %>% head() %>% kable(table.attr = "class='kable'") %>% HTML())
+      }
+      
+      tagList(
+        glue("Please upload the following {length(files)} {ifelse(is_files, 'files:', 'file:')}"), file_links, ".", br(), br(),
+        get_preview())
+    }
+  })
+  
+  load_data <- function(){
 
     values$load_success <- F
+    
     tryCatch(
       {
+        dataset       <- get_dataset()
+        
+        message(glue("in load_data(): {dataset$dataset_code}"))
+        
+        dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
+        
+        file_move(file_input()$datapath, glue("{dir_ecodata}/data-raw/{file_input()$name}"))
+        
+        load_R <- glue("{dir_ecodata}/data-raw/get_{dataset$dataset_code}.R")
+        
+        system(glue("cd {dir_ecodata}; Rscript {load_R}"))
+        
+        load_all(dir_ecodata)
+      
         d <- get(dataset$dataset_code, pos = "package:ecodata")
         
         values$load_success <- T
       },
       error = function(e) {
         stop(safeError(e))
-      },
-      finally = setwd(dir_uploader))
+      })
     
     d
-  })
+  }
   
-  
-  output$fig <- renderImage({
-    req(input$inFile)
+  output$figs <- renderUI({
+    req(file_input())
     
     dataset <- get_dataset()
-    data    <- get_data()
+    # DEBUG:
+    # input = list(g_email = "bdbest@gmail.com")
+    # dataset = list(
+    #   dataset_code = "slopewater",
+    #   dataset_files = "slopewater_proportions.csv",
+    #   plot_chunks = "LTL.Rmd-wsw-prop.R")
+    # dataset = list(
+    #   dataset_code = "bottom_temp",
+    #   dataset_files = "bot_temp_SS.csv, bot_temp_GOM.csv, bot_temp_GB.csv, bot_temp_MAB.csv",
+    #   plot_chunks = "LTL.Rmd-MAB-bot-temp.R, LTL.Rmd-NE-bot-temp.R")
+    # session = list(clientData = list(
+    #   output_fig_width  = 600,
+    #   output_fig_height = 400))
+    
+    dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
+    
+    
+    message(glue("in output$figs about to validate"))
+    validate(
+      need(
+        length(dataset_files) == nrow(file_input()), 
+        message = glue(
+          "Expecting {length(dataset_files)} files for this dataset.
+          Uploaded {nrow(file_input())}.
+          Please try again."))
+      # TODO: check filenames match exactly, report on setdiff()
+      # TODO: check header names & value types per file
+    )
+  
+    # load and fetch new data
+    data <- load_data()
 
     tryCatch(
       {
-        dir_create(glue("{dir_ecodata}/tmp-uploader"))
-        tmp_user_dataset_plot_R <- glue("{dir_ecodata}/tmp-uploader/{input$g_email}_{dataset$dataset_code}_plot.R")
-        plot_png                <- here(glue("data/{input$g_email}/{dataset$dataset_code}/{dataset$dataset_code}.png"))
         
-        # image too big using session$clientData$pixelratio per https://shiny.rstudio.com/articles/images.html
+        message(glue("in output$figs about to plot"))
+        
+        # figure (https://shiny.rstudio.com/articles/images.html)
         fig_dpi    <- 72
         fig_width  <- session$clientData$output_fig_width / fig_dpi
         fig_height <- session$clientData$output_fig_height / fig_dpi
         
-        str_detect(dataset$plot_chunk, "LTL")
+        plot_pfx <- here(glue("data/{input$g_email}/{dataset$dataset_code}/{dataset$dataset_code}"))
+        dir_create(dirname(plot_pfx))
         
-        rmd_group <- str_replace(basename(dataset$plot_chunk), "^(.*)(\\.Rmd.*)$", "\\1")
+        plot_chunks <- str_split(dataset$plot_chunks, ", ", simplify=T) %>% as.vector()
+        rmd_grp     <- str_replace(plot_chunks[1], "^(.*)(\\.Rmd.*)$", "\\1")
         
-        setup_R_files <- list.files(glue("{dir_ecodata}/chunk-scripts"), glue("{rmd_group}.*-setup.R"))
-        setup_R       <- paste(glue("source(here('chunk-scripts/{setup_R_files}'))"), collapse = "\n")
+        # TODO: loop over chunks
+        plot_chunk <- plot_chunks[1]
+        if (length(plot_chunks) > 1){
+          plot_rgn <- str_replace(plot_chunk, "^(.*?)(\\.Rmd)-(.*?)-(.*)\\.R$", "\\3")
+          plot_R   <- glue("{plot_pfx}_{plot_rgn}_plot.R")
+          plot_png <- glue("{plot_pfx}_{plot_rgn}.png")
+        } else {
+          plot_rgn <- "ALL"
+          plot_R   <- glue("{plot_pfx}_plot.R")
+          plot_png <- glue("{plot_pfx}.png")
+        }
+        plot_www <- glue("{dir_uploader}/www/figures/{input$g_email}_{basename(plot_png)}")
+        plot_img <- glue("./figures/{input$g_email}_{basename(plot_png)}")
+        dir_create(dirname(plot_www))
+        
+        setup_R_files <- tibble(
+          file = list.files(glue("{dir_ecodata}/chunk-scripts"), glue("{rmd_grp}.*-setup.R")),
+          nchar = nchar(file)) %>% 
+          arrange(nchar) %>% 
+          pull(file)
+        setup_R <- paste(glue("source(here('chunk-scripts/{setup_R_files}'))"), collapse = "\n") # cat(setup_R)
         
         plot_code  <- glue("
           library(here)
           
           {setup_R}
-          source(here('{dataset$plot_chunk}'))
+          source(here('chunk-scripts/{plot_chunk}'))
           
           ggsave('{plot_png}', width = {fig_width}, height = {fig_height}, dpi = {fig_dpi})
           ") # cat(plot_code)
-        writeLines(plot_code, tmp_user_dataset_plot_R)
-        system(glue("cd {dir_ecodata}; Rscript {tmp_user_dataset_plot_R}"))
+        writeLines(plot_code, plot_R)
+        system(glue("cd {dir_ecodata}; Rscript {plot_R}"))
         
-        list(src = plot_png,
-             alt = glue("Plot output for {dataset$dataset_code}"))
+        message(glue("in output$figs finished system()"))
+        
+        stopifnot(file_exists(plot_png))
+        file_copy(plot_png, plot_www, overwrite = T)
+
+        values$plot_success <- T
+        
+        message(glue("in output$figs values$plot_success"))
+        
+        tagList(
+          tabsetPanel(
+            tabPanel(
+              plot_rgn, 
+              # renderImage(
+              #   list(
+              #     src = plot_png, 
+              #     alt = glue("Plot output for {dataset$dataset_code}"))))))
+              img(
+                src = plot_img,
+                alt = glue("Plot output for {dataset$dataset_code}")))))
+        
+        # OLD: for )
+        # list(src = plot_png, alt = 
+        #      alt = glue("Plot output for {dataset$dataset_code}"))
       },
       error = function(e) {
         stop(safeError(e))
@@ -241,8 +380,10 @@ server <- function(input, output, session) {
   })
   
   output$tbl <- renderDT({
-    req(input$inFile)
+    req(file_input())
     req(values$load_success)
+    
+    dataset <- get_dataset()
     
     get(dataset$dataset_code, pos = "package:ecodata")
   })
