@@ -283,7 +283,6 @@ server <- function(input, output, session) {
     
     dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
     
-    
     message(glue("in output$figs about to validate"))
     validate(
       need(
@@ -296,7 +295,7 @@ server <- function(input, output, session) {
       # TODO: check header names & value types per file
     )
   
-    # load and fetch new data
+    # load new data
     data <- load_data()
 
     tryCatch(
@@ -316,62 +315,60 @@ server <- function(input, output, session) {
         rmd_grp     <- str_replace(plot_chunks[1], "^(.*)(\\.Rmd.*)$", "\\1")
         
         # TODO: loop over chunks
-        plot_chunk <- plot_chunks[1]
-        if (length(plot_chunks) > 1){
-          plot_rgn <- str_replace(plot_chunk, "^(.*?)(\\.Rmd)-(.*?)-(.*)\\.R$", "\\3")
-          plot_R   <- glue("{plot_pfx}_{plot_rgn}_plot.R")
-          plot_png <- glue("{plot_pfx}_{plot_rgn}.png")
-        } else {
-          plot_rgn <- "ALL"
-          plot_R   <- glue("{plot_pfx}_plot.R")
-          plot_png <- glue("{plot_pfx}.png")
+        tab_panels = list()
+        
+        #for (plot_chunk in plot_chunks){ # plot_chunk = plot_chunks[2]
+          
+        plot_chunk_to_tab_panel <- function(plot_chunk){
+          if (length(plot_chunks) > 1){
+            plot_rgn <- str_replace(plot_chunk, "^(.*?)(\\.Rmd)-(.*?)-(.*)\\.R$", "\\3")
+            plot_R   <- glue("{plot_pfx}_{plot_rgn}_plot.R")
+            plot_png <- glue("{plot_pfx}_{plot_rgn}.png")
+          } else {
+            plot_rgn <- "ALL"
+            plot_R   <- glue("{plot_pfx}_plot.R")
+            plot_png <- glue("{plot_pfx}.png")
+          }
+          plot_www <- glue("{dir_uploader}/www/figures/{input$g_email}_{basename(plot_png)}")
+          plot_img <- glue("./figures/{input$g_email}_{basename(plot_png)}")
+          dir_create(dirname(plot_www))
+          
+          setup_R_files <- tibble(
+            file = list.files(glue("{dir_ecodata}/chunk-scripts"), glue("{rmd_grp}.*-setup.R")),
+            nchar = nchar(file)) %>% 
+            arrange(nchar) %>% 
+            pull(file)
+          setup_R <- paste(glue("source(here('chunk-scripts/{setup_R_files}'))"), collapse = "\n") # cat(setup_R)
+          
+          plot_code  <- glue("
+            library(here)
+            
+            {setup_R}
+            source(here('chunk-scripts/{plot_chunk}'))
+            
+            ggsave('{plot_png}', width = {fig_width}, height = {fig_height}, dpi = {fig_dpi})
+            ") # cat(plot_code)
+          writeLines(plot_code, plot_R)
+          system(glue("cd {dir_ecodata}; Rscript {plot_R}"))
+          
+          stopifnot(file_exists(plot_png))
+          file_copy(plot_png, plot_www, overwrite = T)
+          
+          tabPanel(
+            plot_rgn, 
+            img(
+              src = plot_img,
+              alt = glue("Plot output for {dataset$dataset_code}")))
         }
-        plot_www <- glue("{dir_uploader}/www/figures/{input$g_email}_{basename(plot_png)}")
-        plot_img <- glue("./figures/{input$g_email}_{basename(plot_png)}")
-        dir_create(dirname(plot_www))
+      
+        # message(glue("in output$figs values$plot_success"))
+        # values$plot_success <- T
         
-        setup_R_files <- tibble(
-          file = list.files(glue("{dir_ecodata}/chunk-scripts"), glue("{rmd_grp}.*-setup.R")),
-          nchar = nchar(file)) %>% 
-          arrange(nchar) %>% 
-          pull(file)
-        setup_R <- paste(glue("source(here('chunk-scripts/{setup_R_files}'))"), collapse = "\n") # cat(setup_R)
-        
-        plot_code  <- glue("
-          library(here)
-          
-          {setup_R}
-          source(here('chunk-scripts/{plot_chunk}'))
-          
-          ggsave('{plot_png}', width = {fig_width}, height = {fig_height}, dpi = {fig_dpi})
-          ") # cat(plot_code)
-        writeLines(plot_code, plot_R)
-        system(glue("cd {dir_ecodata}; Rscript {plot_R}"))
-        
-        message(glue("in output$figs finished system()"))
-        
-        stopifnot(file_exists(plot_png))
-        file_copy(plot_png, plot_www, overwrite = T)
-
-        values$plot_success <- T
-        
-        message(glue("in output$figs values$plot_success"))
-        
-        tagList(
-          tabsetPanel(
-            tabPanel(
-              plot_rgn, 
-              # renderImage(
-              #   list(
-              #     src = plot_png, 
-              #     alt = glue("Plot output for {dataset$dataset_code}"))))))
-              img(
-                src = plot_img,
-                alt = glue("Plot output for {dataset$dataset_code}")))))
-        
-        # OLD: for )
-        # list(src = plot_png, alt = 
-        #      alt = glue("Plot output for {dataset$dataset_code}"))
+        do.call(
+          tabsetPanel,
+          lapply(
+            plot_chunks, 
+            plot_chunk_to_tab_panel))
       },
       error = function(e) {
         stop(safeError(e))
