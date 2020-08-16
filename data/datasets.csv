@@ -1,0 +1,41 @@
+Name,Contributor Email,Data Name,Subgroup,File Name,New to this SOE?,Metadata Completed?,Private,Notes,Uploader Editors
+Ryan Morse,ryan.morse@noaa.gov,Small-Large copepod index,Env/LTL,SLI_Small-Large_copepod_anomaly.rdata,No,In Progress,No,NA,kim bb
+Ryan Morse,ryan.morse@noaa.gov,Copepod abundance anomalies,Env/LTL,Copepod_yearly_abundance_anomalies_by_EPU.rdata,No,In Progress,No,NA,kim
+Megan Tyrrell,megan.tyrrell@state.ma.us,"Northeast National Estuarine Research Reserves, monthly nutrient, DO, temp data",Env/LTL,NA,Yes,In Progress,No,NA,kim
+Vincent Saba,vincent.saba@noaa.gov,Gulf Stream Index,Env/LTL,GSI_21points_CMEMS_1_degree.xlsx,No (but new GSI source this year...SSH based and shorter time-series),Yes,No,NA,NA
+Vincent Saba,vincent.saba@noaa.gov,Marine Heatwaves,Env/LTL,Marine_Heatwaves_USNES_2019.txt,Yes,Yes,No,NA,NA
+Paula Fratantoni,paula.fratantoni@noaa.gov,Bottom temperature anomaly time series in each ecoregion,Env/LTL,EcoGoM_core_Ttopbot.csv; EcoGB_core_Ttopbot.csv; EcoMAB_core_Ttopbot.csv; EcoSS_core_Ttopbot.csv,No,Yes,No,NA,NA
+Paula Fratantoni,paula.fratantoni@noaa.gov,Slope water composition,Env/LTL,slopewater_proportions.csv,No,Yes,No,NA,bb test
+Ruth Boettcher,ruth.boettcher@dgif.virginia.gov,VA COTE breeding survey data,Macrofauna,VA COTE pr estimates_2003_2018.xlsx,Yes,In Progress,No,NA,NA
+Sean Lucey,sean.lucey@noaa.gov,Aggregated biomass,Macrofauna,Aggregated_Survey_biomass_20.RData,No,Yes,No,NA,NA
+Sean Lucey,sean.lucey@noaa.gov,Landings,Human Dimensions,Commercial_data_pull_20,No,Yes,Yes,NA,bb
+Sean Lucey,sean.lucey@noaa.gov,Proportion of landings managed,Human Dimensions,Commercial_data_pull_20,No,Yes,No,NA,NA
+Sean Lucey,sean.lucey@noaa.gov,total landings,Human Dimensions,Commercial_data_pull_20,No,Yes,No,NA,NA
+Sean Lucey,sean.lucey@noaa.gov,landings disposition,Human Dimensions,Commercial_data_pull_20,No,Yes,No,NA,NA
+Kimberly Bastille,kimberly.bastille@noaa.gov,noa index,Env/LTL,NAO_index.csv,yes/no,No,No,NA,NA
+Kevin Friedland,kevin.friedland@noaa.gov,wind_habitat,Human Dimensions,wind sp pa data.xlsx,Yes,In Progress,No,NA,NA
+Kevin Friedland,kevin.friedland@noaa.gov,Habitat occupency model,Macrofauna,hab_occupency.csv,No,In Progress,No,NA,NA
+Laurel Smith,Laurel.smith@noaa.gov,Condition factor index,Macrofauna,Fall_rel_condition_2019.csv,No,Yes,No,NA,NA
+Sarah Gaichas,Sarah.Gaichas@noaa.gov,stock status,Macrofauna,2019assess.csv;  2019decoder.csv,No,NA,No,NA,NA
+George Silva,george.silva@noaa.gov,HMS landings,Human Dimensions,2016-2018_ATLHMS_NewEngland_MidAtlantic - George Silva - NOAA Federal.xlsx,Yes,No,No,NA,NA
+Geret DePiper,geret.depiper@noaa.gov,Recreational fleet effort diversity,Human Dimensions,Rec_angler_effort_2019,No,Yes,No,NA,NA
+Geret DePiper,geret.depiper@noaa.gov,Recrational harvest,Human Dimensions,REC_HARVEST_2019,No,Yes,No,NA,NA
+Geret DePiper,geret.depiper@noaa.gov,Recreational species diversity,Human Dimensions,Rec_Species_Diversity_2019,No,In Progress,No,NA,NA
+Geret DePiper,geret.depiper@noaa.gov,Commercial species diversity,Human Dimensions,Commercial_Diversity_2019,No,Yes,No,NA,NA
+Geret DePiper,geret.depiper@noaa.gov,Commercial fleet diversity,Human Dimensions,Commercial_Diversity_2019,No,Yes,No,NA,NA
+Geret DePiper,geret.depiper@noaa.gov,Commercial fleet count,Human Dimensions,Commercial_Diversity_2019,No,Yes,No,NA,NA
+Chris Melrose,chris.melrose@noaa.gov,Cold Pool Index,Env/LTL,cold pool index for SOE 1977-2018.csv,Yes,No,No,NA,NA
+Lisa Colburn,lisa.l.colburn@noaa.gov,Commercial Fishing Engagement Scores 2004-2018,Human Dimensions,ComEng Scores 2004-2018 for SOE 2020 Report 021020,No,Yes,No,NA,NA
+Mark Wuenschel,mark.wuenschel@noaa.gov,Forage Fish Energy Content,Env/LTL,Forage_ED_data_Bean_20019,No,In Progress,Yes,NA,NA
+Kimberly Hyde,kimberly.hyde@noaa.gov,Chlorophyll a,Env/LTL,SOE_V2019_2-NES_ECOREGIONS-CHLOR_A-STATS_ANOMS-SEAWIFS_MODIS,No,In Progress,No,May need to update metadata,NA
+Kimberly Hyde,kimberly.hyde@noaa.gov,Primary Production,Env/LTL,SOE_V2019_2-NES_ECOREGIONS-PPD-STATS_ANOMS-SEAWIFS_MODIS,No,In Progress,No,May need to update metadata,NA
+Chris Orphanides,chris.orphanides@noaa.gov,Right Whale Abundance,Macrofauna,RW Abundance & Calves -for 2020 report.xlsx,No,In Progress,No,NA,NA
+Harvey Walsh,harvey.walsh@noaa.gov,Ichthyoplankton Diversity,Macrofauna,NEFSCIchthyoplankton_v3_6.xlsx,No,In Progress,No,NA,NA
+Harvey Walsh,harvey.walsh@noaa.gov,Zooplankton Diversity,Env/LTL,NEFSCZooplankton_v3_6.xlsx,Yes,In Progress,No,NA,NA
+Harvey Walsh,harvey.walsh@noaa.gov,Plankton biomass,Env/LTL,NEFSCZooplankton_v3_6.xlsx,Yes,In Progress,No,NA,NA
+Sean Lucey,Sean.lucey@noaa.gov,Bennet Index,Human Dimensions,Bennet_Index_20.RData,No,NA,NA,Double check with Geret about these last two columns,NA
+Jim Gartland,jgartlan@vims.edu,NEMAP biomass,Macrofauna,NEAMAP_SOE_INDICES_2019.xlsx,No,Yes,No,NA,NA
+Jim Gartland,jgartlan@vims.edu,NEMAP Condition factor,Macrofauna,NEAMAP Fall_Condition 2008 2018.xlsx,Yes,NA,No,NA,NA
+Sean Lucey,Sean.lucey@noaa.gov,Mass Inshore survey,Macrofauna,Aggregated_Mass_Survey_biomass_20.RData,No,Yes,No,NA,NA
+Don Lyons,dlyons@audubon.org,GOM common tern,Macrofauna,Audobon Common Tern Data for 2019 NOAA SOE,No,Yes,No,NA,NA
+Ben Test,bdbest@gmail.com,Data Test,Macrofauna,test,No,Yes,No,NA,NA
