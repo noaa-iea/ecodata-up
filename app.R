@@ -108,7 +108,7 @@ ui <- tagList(
             condition = "input.g_id && input.dt_datasets_rows_selected.length == 0",
             "Please select a dataset row in the table below. 
             If you don't see your dataset below, we're working on uploading new datasets. 
-            Meanwhile please email kimberly.bastille@noaa.gov."),
+            Meanwhile please email: ben@ecoquants.com, kimberly.bastille@noaa.gov."),
           conditionalPanel(
             condition = "input.dt_datasets_rows_selected.length > 0",
             actionButton("btnNextUpload", "Next", class="btn-primary"),"3. Upload")),
@@ -134,9 +134,11 @@ ui <- tagList(
                 accept = c(
                   "text/csv",
                   "text/comma-separated-values,text/plain",
-                  ".csv")))),
+                  ".csv"))),
+            uiOutput("uiSubmit")),
           mainPanel(
             uiOutput("uiUploadSuggestion"),
+            uiOutput("uiSubmitted"),
             uiOutput("figs"),
             DTOutput("tbl"))))
   ))
@@ -152,46 +154,72 @@ server <- function(input, output, session) {
   # reactives ----
   
   values <- reactiveValues(
-    load_success = F,
-    plot_success = F,
-    upload_state = NULL,
-    git_branch  = NULL,       
+    load_success       = F,
+    plot_success       = F,
+    submit_success     = F,
+    upload_state       = NULL,
+    pull_request       = NULL,
+    git_branch         = NULL,       
     dir_ecodata_branch = NULL)
   
   observeEvent(input$inFile, {
-    values$upload_state <- 'uploaded'
+    values$upload_state   <- 'uploaded'
+    values$submit_success <- F
   })
   
-  # git_branch_freshen ----
   git_branch_freshen <- function(){
     
     # https://docs.github.com/en/github/authenticating-to-github/creating-a-personal-access-token
     gh_pat <- readLines("/share/iea-uploader_github-personal-access-token_bbest.txt")
     
+    dataset <- get_dataset()
+    
     git_branch_delete_new_cmds <- glue(
       "
       cd {values$dir_ecodata_branch}
       
-      if [ `git branch --list {git_branch}` ]
+      # set git user defaults
+      git config --global user.email 'ben@ecoquants.com'
+      git config --global user.name 'Ben Best'
+      GITHUB_TOKEN={gh_pat}
+      GITHUB_USER=bbest
+      
+      # get latest
+      git fetch -p
+      
+      # delete local branch if exists
+      if [ `git branch --list {values$git_branch}` ]
       then
-        git branch -D {git_branch}
+        echo 'deleting local branch {values$git_branch}'
+        git branch -D {values$git_branch}
       fi
-      git checkout -b {git_branch}
-      git remote set-url origin https://bbest:{gh_pat}@github.com/bbest/ecodata.git
+      
+      # delete remote branch if exists
+      if [ `git branch -r | grep '{values$git_branch}' | wc -l` == '1' ]
+      then
+        echo 'deleting remote branch {values$git_branch}'
+        git push origin --delete {values$git_branch}
+      fi
+      
+      # create new local branch and 
+      git checkout -b {values$git_branch}
       git branch --set-upstream-to=origin/{values$git_branch} {values$git_branch}
+      git remote set-url origin https://bbest:{gh_pat}@github.com/bbest/ecodata.git
       git pull
       ")
+    # git ls-remote --heads bbest@github.com:bbest/ecodata.git bdbest@gmail.com_slopewater | wc -l
     
-    if (dir_exists(values$dir_ecodata_branch)){
+    message(glue("before dir.exists() values$dir_ecodata_branch: {values$dir_ecodata_branch}"))
+    if (dir.exists(values$dir_ecodata_branch)){
       git_cmds <- glue(
         "
         # get latest
         cd {values$dir_ecodata_branch}
         git checkout master
         git pull
+        git fetch
           
-        {git_branch_delete_new_cmds}") # cat(git_cmds)
-      system(git_cmds)
+        {git_branch_delete_new_cmds}")
     } else {
       git_cmds <- glue(
         "
@@ -202,19 +230,30 @@ server <- function(input, output, session) {
         # copy with attributes recursively
         cp -ar {dir_ecodata_src} {values$dir_ecodata_branch}
         
+        # turn off file chmod modifications
+        cd {values$dir_ecodata_branch}
+        git config core.fileMode false
+        chmod -R 777 ../{values$dir_ecodata_branch}
+        
         {git_branch_delete_new_cmds}")
     }
+    message(git_cmds)
     system(git_cmds)
   }
   
   git_commit_push_request <- function(){
-    # install once on server in Terminal: sudo ap-get update; sudo apt-get install hub
+    # install once 
     
-    # git config --global user.email "you@example.com"
-    # git config --global user.name "Your Name"
-    # test:
-    #   echo "test 8 after setting bbest@github_pat" > test_branch_pull-request.txt
-    
+    # setup once on server in Terminal:
+    #
+    # # install hub
+    # sudo ap-get update; sudo apt-get install hub
+    #
+    # # set github username default for user shiny
+    # sudo su - shiny
+    # cd '/share/github/ecodata_bdbest@gmail.com_slopewater'
+    # hub pr list -h 'bdbest@gmail.com_slopewater' -f '%U|%i %t'
+
     dataset <- get_dataset()
     
     if (nrow(dataset) == 1 & values$load_success & values$plot_success){
@@ -222,35 +261,67 @@ server <- function(input, output, session) {
       git_msg <- glue("{input$g_email} updating {dataset$dataset_code} dataset via Uploader app")
       git_cmds <- glue(
         "
+        cd '{values$dir_ecodata_branch}'
         git add -A && git commit -m '{git_msg}'
-        git push
-        hub pull-request -m '{git_msg}'")
-      cat(git_cmds)
+        git push --set-upstream origin '{values$git_branch}'
+        ")
+      
+      # TODO: return URL to pull request
+      # hub pr list -h 'bdbest@gmail.com_slopewater' -f '%U | %t'
+      
+      message(git_cmds)
       system(git_cmds)
+      
+      list_pull_request <- function(){
+        git_cmd <- glue(
+          "
+          cd '{values$dir_ecodata_branch}'
+          hub pr list -h '{values$git_branch}' -f '%U|%i %t'") # cat(git_cmd)
+        pr_url_title <- system(git_cmd, intern = T)
+      
+        if (length(pr_url_title) == 0)
+          return(NA)
+        
+        pr_url_title
+      }
+      
+      pr <- list_pull_request()
+      if (is.na(pr[1])){
+        git_cmd <- glue(
+          "cd '{values$dir_ecodata_branch}'
+          hub pull-request {values$git_branch} -m '{git_msg}'")
+        system(git_cmd)
+        pr <- list_pull_request()
+      }
+      
+      values$pull_request <- pr
+      
+      # share link to pull request
+      return(pr)
+    } else {
+      return(NA)
+    }
   }
   
   # observe dataset selection ----
   observeEvent(input$dt_datasets_rows_selected, {
-    values$load_success <- F
-    values$plot_success <- F
-    values$upload_state <- 'reset'
+    values$load_success   <- F
+    values$plot_success   <- F
+    values$submit_success <- F
+    values$pull_request   <- NA
+    values$upload_state   <- 'reset'
     
     dataset <- get_dataset()
     
     if (nrow(dataset) == 1){
-      # branch ecodata src
       values$git_branch         <- glue("{input$g_email}_{dataset$dataset_code}")
-      values$dir_ecodata_branch <- glue("{dir_ecodata}_{git_branch}")
+      values$dir_ecodata_branch <- glue("{dir_ecodata_src}_{values$git_branch}")
       
       git_branch_freshen()
-    
-      plot_pfx <- here(glue("data/{input$g_email}/{dataset$dataset_code}/{dataset$dataset_code}"))
-      
-      
+    }else{
+      values$git_branch         <- NULL
+      values$dir_ecodata_branch <- NULL
     }
-    # setup fresh dir_ecodata
-    
-    
   })
   
   observeEvent(input$btnNextSelect, {
@@ -314,10 +385,10 @@ server <- function(input, output, session) {
       
       files     <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
       is_files  <- ifelse(length(files) > 1, T, F)
-      file1_csv <- glue("{dir_ecodata}/data-raw/{files[1]}")
+      file1_csv <- glue("{values$dir_ecodata_branch}/data-raw/{files[1]}")
       
       file_url_pfx <- "https://github.com/NOAA-EDAB/ecodata/blob/master/data-raw"
-      file_links   <- lapply(files, function(f) a(f, href = glue("{file_url_pfx}/{f}.csv"), target="_blank")) %>% tagList()
+      file_links   <- lapply(files, function(f) a(f, href = glue("{file_url_pfx}/{f}"), target="_blank")) %>% tagList()
 
       get_preview <- function(){
         if (!file.exists(file1_csv)) return("")
@@ -346,13 +417,13 @@ server <- function(input, output, session) {
         
         dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
         
-        file_move(file_input()$datapath, glue("{dir_ecodata}/data-raw/{file_input()$name}"))
+        file_move(file_input()$datapath, glue("{values$dir_ecodata_branch}/data-raw/{file_input()$name}"))
         
-        load_R <- glue("{dir_ecodata}/data-raw/get_{dataset$dataset_code}.R")
+        load_R <- glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
         
-        system(glue("cd {dir_ecodata}; Rscript {load_R}"))
+        system(glue("cd {values$dir_ecodata_branch}; Rscript {load_R}"))
         
-        load_all(dir_ecodata)
+        load_all(values$dir_ecodata_branch)
       
         d <- get(dataset$dataset_code, pos = "package:ecodata")
         
@@ -371,18 +442,18 @@ server <- function(input, output, session) {
   #   dataset_code = "slopewater",
   #   dataset_files = "slopewater_proportions.csv",
   #   plot_chunks = "LTL.Rmd-wsw-prop.R")
-  # dataset = list(
-  #   dataset_code = "bottom_temp",
-  #   dataset_files = "bot_temp_SS.csv, bot_temp_GOM.csv, bot_temp_GB.csv, bot_temp_MAB.csv",
-  #   plot_chunks = "LTL.Rmd-MAB-bot-temp.R, LTL.Rmd-NE-bot-temp.R")
+  # # dataset = list(
+  # #   dataset_code = "bottom_temp",
+  # #   dataset_files = "bot_temp_SS.csv, bot_temp_GOM.csv, bot_temp_GB.csv, bot_temp_MAB.csv",
+  # #   plot_chunks = "LTL.Rmd-MAB-bot-temp.R, LTL.Rmd-NE-bot-temp.R")
   # session = list(clientData = list(
   #   output_fig_width  = 600,
   #   output_fig_height = 400))
   # values = list(
   #   git_branch = glue("{input$g_email}_{dataset$dataset_code}"),
-  #   dir_ecodata_branch = glue("{dir_ecodata}_{git_branch}"))
+  #   dir_ecodata_branch = glue("{dir_ecodata_src}_{git_branch}"))
   
-  # output$figs ----
+  # output$figs: executes load_data(), plot chunks, git_commit_push_request() ----
   output$figs <- renderUI({
     req(file_input())
     
@@ -405,81 +476,82 @@ server <- function(input, output, session) {
     # load new data
     data <- load_data()
 
-    tryCatch(
-      {
+    # tryCatch(
+    #   {
         
-        message(glue("in output$figs about to plot"))
-        
-        # figure (https://shiny.rstudio.com/articles/images.html)
-        fig_dpi    <- 72
-        fig_width  <- session$clientData$output_fig_width / fig_dpi
-        fig_height <- session$clientData$output_fig_height / fig_dpi
-        
-        plot_pfx <- here(glue("data/{input$g_email}/{dataset$dataset_code}/{dataset$dataset_code}"))
-        dir_create(dirname(plot_pfx))
-        
-        plot_chunks <- str_split(dataset$plot_chunks, ", ", simplify=T) %>% as.vector()
-        rmd_grp     <- str_replace(plot_chunks[1], "^(.*)(\\.Rmd.*)$", "\\1")
-        
-        # TODO: loop over chunks
-        tab_panels = list()
-        
-        #for (plot_chunk in plot_chunks){ # plot_chunk = plot_chunks[2]
-          
-        plot_chunk_to_tab_panel <- function(plot_chunk){
-          if (length(plot_chunks) > 1){
-            plot_rgn <- str_replace(plot_chunk, "^(.*?)(\\.Rmd)-(.*?)-(.*)\\.R$", "\\3")
-            plot_R   <- glue("{plot_pfx}_{plot_rgn}_plot.R")
-            plot_png <- glue("{plot_pfx}_{plot_rgn}.png")
-          } else {
-            plot_rgn <- "ALL"
-            plot_R   <- glue("{plot_pfx}_plot.R")
-            plot_png <- glue("{plot_pfx}.png")
-          }
-          plot_www <- glue("{dir_uploader}/www/figures/{input$g_email}_{basename(plot_png)}")
-          plot_img <- glue("./figures/{input$g_email}_{basename(plot_png)}")
-          dir_create(dirname(plot_www))
-          
-          setup_R_files <- tibble(
-            file = list.files(glue("{dir_ecodata}/chunk-scripts"), glue("{rmd_grp}.*-setup.R")),
-            nchar = nchar(file)) %>% 
-            arrange(nchar) %>% 
-            pull(file)
-          setup_R <- paste(glue("source(here('chunk-scripts/{setup_R_files}'))"), collapse = "\n") # cat(setup_R)
-          
-          plot_code  <- glue("
-            library(here)
-            
-            {setup_R}
-            source(here('chunk-scripts/{plot_chunk}'))
-            
-            ggsave('{plot_png}', width = {fig_width}, height = {fig_height}, dpi = {fig_dpi})
-            ") # cat(plot_code)
-          writeLines(plot_code, plot_R)
-          system(glue("cd {dir_ecodata}; Rscript {plot_R}"))
-          
-          stopifnot(file_exists(plot_png))
-          file_copy(plot_png, plot_www, overwrite = T)
-          
-          tabPanel(
-            plot_rgn, 
-            img(
-              src = plot_img,
-              alt = glue("Plot output for {dataset$dataset_code}")))
-        }
+    message(glue("in output$figs about to plot"))
+    
+    # figure (https://shiny.rstudio.com/articles/images.html)
+    fig_dpi    <- 72
+    fig_width  <- session$clientData$output_fig_width / fig_dpi
+    fig_height <- session$clientData$output_fig_height / fig_dpi
+    
+    plot_pfx <- here(glue("data/{input$g_email}/{dataset$dataset_code}/{dataset$dataset_code}"))
+    dir_create(dirname(plot_pfx))
+    
+    plot_chunks <- str_split(dataset$plot_chunks, ", ", simplify=T) %>% as.vector()
+    rmd_grp     <- str_replace(plot_chunks[1], "^(.*)(\\.Rmd.*)$", "\\1")
+    
+    plot_chunk_to_tab_panel <- function(plot_chunk){
+      if (length(plot_chunks) > 1){
+        plot_rgn <- str_replace(plot_chunk, "^(.*?)(\\.Rmd)-(.*?)-(.*)\\.R$", "\\3")
+        plot_R   <- glue("{plot_pfx}_{plot_rgn}_plot.R")
+        plot_png <- glue("{plot_pfx}_{plot_rgn}.png")
+      } else {
+        plot_rgn <- "plot"
+        plot_R   <- glue("{plot_pfx}_plot.R")
+        plot_png <- glue("{plot_pfx}.png")
+      }
       
-        message(glue("in output$figs values$plot_success"))
-        values$plot_success <- T
+      message(glue("\nplot_R: {plot_R}\n\n"))
+      
+      plot_www <- glue("{dir_uploader}/www/figures/{input$g_email}_{basename(plot_png)}")
+      plot_img <- glue("./figures/{input$g_email}_{basename(plot_png)}")
+      dir_create(dirname(plot_www))
+      
+      setup_R_files <- tibble(
+        file = list.files(glue("{values$dir_ecodata_branch}/chunk-scripts"), glue("{rmd_grp}.*-setup.R")),
+        nchar = nchar(file)) %>% 
+        arrange(nchar) %>% 
+        pull(file)
+      setup_R <- paste(glue("source(here('chunk-scripts/{setup_R_files}'))"), collapse = "\n") # cat(setup_R)
+      
+      plot_code  <- glue("
+          library(here)
+          
+          {setup_R}
+          source(here('chunk-scripts/{plot_chunk}'))
+          
+          ggsave('{plot_png}', width = {fig_width}, height = {fig_height}, dpi = {fig_dpi})
+          ") # cat(plot_code)
+      message(c("\nplot_code:\n", plot_code, "\n\n"))
+      writeLines(plot_code, plot_R)
+      system(glue("cd {values$dir_ecodata_branch}; chmod 777 {plot_R}; Rscript {plot_R}"))
+      
+      stopifnot(file_exists(plot_png))
+      file_copy(plot_png, plot_www, overwrite = T)
+      
+      tabPanel(
+        plot_rgn, 
+        img(
+          src = plot_img,
+          alt = glue("Plot output for {dataset$dataset_code}")))
+    }
+    
+    message(glue("in output$figs values$plot_success"))
+    values$plot_success <- T
+    
+    tabset <- do.call(
+      tabsetPanel,
+      lapply(
+        plot_chunks, 
+        plot_chunk_to_tab_panel))
         
-        do.call(
-          tabsetPanel,
-          lapply(
-            plot_chunks, 
-            plot_chunk_to_tab_panel))
-      },
-      error = function(e) {
-        stop(safeError(e))
-      })
+      # },
+      # error = function(e) {
+      #   message(c("ERROR in output$figs(tryCatch())", safeError(e)))
+      #   stop(safeError(e))
+      # })
     
   })
   
@@ -492,6 +564,38 @@ server <- function(input, output, session) {
     
     get(dataset$dataset_code, pos = "package:ecodata")
   })
+  
+  # output$uiSubmit ----
+  output$uiSubmit <- renderUI({
+    
+    if (!values$load_success | !values$plot_success | values$submit_success)
+      return(tagList())
+    
+    tagList(
+      "Success loading and plotting data!", br(),
+      "Finally, are you ready to", strong("Submit"), "these updated data files for internal review?", br(), br(),
+      actionButton("btnSubmit", "Submit", class="btn-primary"))
+  })
+  
+  observeEvent(input$btnSubmit, {
+    pr <- git_commit_push_request()
+    values$submit_success <- T
+  })
+  
+  
+  # output$uiSubmitted ----
+  output$uiSubmitted <- renderUI({
+    if (!values$submit_success | is.na(values$pull_request))
+      return(tagList())
+
+    pr_url_title <- values$pull_request %>% 
+      str_split(fixed("|"), simplify = T) %>% as.vector() %>% str_trim()
+    pr_a <- a(pr_url_title[2], href=pr_url_title[1], target="_blank")
+    
+    tagList(
+      "SUCCESS! You can visit the submitted file changes to the ecodata R package here (and further comment after signing into Github):", br(), pr_a, br(), br())
+  })
+  
 }
 
 shinyApp(ui = ui, server = server)
