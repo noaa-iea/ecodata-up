@@ -357,7 +357,7 @@ server <- function(input, output, session) {
   rm <- function(path){
     if (file.exists(path)) file_delete(path)}
   chmod <- function(path, mode = "775"){
-    if (file.exists(path)) file_chmod(path, mode)}
+    if (file.exists(path)) system(glue("sudo chmod {mode} {path}"))}
   
   # observe dataset selection ----
   observeEvent(input$dt_datasets_rows_selected, {
@@ -522,9 +522,15 @@ server <- function(input, output, session) {
     
     files_dest <- glue("{values$dir_ecodata_branch}/data-raw/{file_input()$name}")
 
+    file_move(file_input()$datapath, files_dest)
+    walk(files_dest, chmod, mode = "775")
+    
     message(glue('Sys.info()[["effective_user"]]: {Sys.info()[["effective_user"]]}'))
+    
+    load_R   <- glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
     load_log <- glue(
       "{dir_uploader}/www/figures/{input$g_email}/{dataset$dataset_code}_load_Rlog.txt")
+    
     dir_create(dirname(load_log))
     chmod(dirname(load_log), "775")
     
