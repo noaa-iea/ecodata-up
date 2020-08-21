@@ -1,0 +1,44 @@
+here() starts at /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater
+
+Attaching package: ‘dplyr’
+
+The following objects are masked from ‘package:stats’:
+
+    filter, lag
+
+The following objects are masked from ‘package:base’:
+
+    intersect, setdiff, setequal, union
+
+
+Attaching package: ‘kableExtra’
+
+The following object is masked from ‘package:dplyr’:
+
+    group_rows
+
+Linking to GEOS 3.7.1, GDAL 2.4.0, PROJ 5.2.0
+Loading required package: sp
+rgdal: version: 1.4-8, (SVN revision 845)
+ Geospatial Data Abstraction Library extensions to R successfully loaded
+ Loaded GDAL runtime: GDAL 2.4.0, released 2018/12/14
+ Path to GDAL shared files: /usr/share/gdal
+ GDAL binary built with GEOS: TRUE 
+ Loaded PROJ.4 runtime: Rel. 5.2.0, September 15th, 2018, [PJ_VERSION: 520]
+ Path to PROJ.4 shared files: (autodetected)
+ Linking to sp version: 1.4-1 
+
+Attaching package: ‘raster’
+
+The following object is masked from ‘package:patchwork’:
+
+    area
+
+The following object is masked from ‘package:tidyr’:
+
+    extract
+
+The following object is masked from ‘package:dplyr’:
+
+    select
+
