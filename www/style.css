@@ -5,3 +5,8 @@
 .shiny-output-error-validation {
   color: red;
 }
+
+
+#plot4size {
+  display: none;
+}
