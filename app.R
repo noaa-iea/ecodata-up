@@ -231,6 +231,7 @@ server <- function(input, output, session) {
       git reset
       git checkout .
       git clean -f -d
+
       git branch --set-upstream-to=origin/{values$git_branch} {values$git_branch}
       git remote set-url origin https://bbest:{gh_pat}@github.com/bbest/ecodata.git
       git pull
@@ -264,7 +265,7 @@ server <- function(input, output, session) {
         cd {values$dir_ecodata_branch}
         git config core.fileMode false
         sudo chmod -R 775 {values$dir_ecodata_branch}
-        
+
         {git_branch_reset_cmds}")
     }
     message(git_cmds)
@@ -520,12 +521,8 @@ server <- function(input, output, session) {
     dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
     
     files_dest <- glue("{values$dir_ecodata_branch}/data-raw/{file_input()$name}")
-    
+
     message(glue('Sys.info()[["effective_user"]]: {Sys.info()[["effective_user"]]}'))
-    file_move(file_input()$datapath, files_dest)
-    walk(files_dest, chmod, mode = "775")
-    
-    load_R   <- glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
     load_log <- glue(
       "{dir_uploader}/www/figures/{input$g_email}/{dataset$dataset_code}_load_Rlog.txt")
     dir_create(dirname(load_log))
@@ -706,6 +703,7 @@ server <- function(input, output, session) {
       plot_img  <- glue("./figures/{input$g_email}/{basename(plot_png)}")
       dir_create(dirname(plot_pfx))
       chmod(dirname(plot_pfx), "775")
+
       message(glue("\nplot_R: {plot_R} -> {plot_png}\n\n"))
       
       walk(c(plot_R, plot_png, plot_log), rm)

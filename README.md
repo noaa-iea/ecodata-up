@@ -25,6 +25,50 @@ cd /share/github/iea-uploader; sudo chmod -R 777 data; sudo chmod -R 777 www
 cd /share/github/ecodata; git reset; git checkout .
 ```
 
+### default permissions
+
+Setup default permissions to work for both shiny and admin users.
+
+Set so group is writable for each user in Terminal manually:
+
+- admin
+- shiny
+
+```bash
+user=admin
+user=shiny
+
+sudo su - $user
+printf "\numask 0002\n" >> .profile
+```
+
+Add shiny to staff group:
+
+```bash
+user=shiny
+group=staff
+
+sudo usermod -a -G $group $user; groups $user
+```
+
+Set default group for following paths:
+
+- /share/github/ecodata_uploader
+- /share/github/iea-uploader
+
+```bash
+group=staff
+dir=/share/github/ecodata_uploader
+dir=/share/github/iea-uploader/www/figures
+
+sudo chgrp -R $group $dir
+sudo chmod g+s $dir
+sudo chmod -R 775 $dir
+
+# test
+tst=/share/github/ecodata_uploader/umask_test.txt
+touch $tst; ls -l $tst; rm $tst
+```
 
 ## initial dataset test
 
