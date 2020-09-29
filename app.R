@@ -1,6 +1,7 @@
 # libraries ----
 if (!require(librarian)){
-  remotes::install_github("DesiQuintans/librarian")
+  #remotes::install_github("DesiQuintans/librarian")
+  install.packages("librarian")
   library(librarian)
 }
 shelf(
@@ -527,14 +528,32 @@ server <- function(input, output, session) {
     
     message(glue('Sys.info()[["effective_user"]]: {Sys.info()[["effective_user"]]}'))
     
-    load_R   <- glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
+    load_R <- glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
     load_log <- glue(
       "{dir_uploader}/www/figures/{input$g_email}/{dataset$dataset_code}_load_Rlog.txt")
     
     dir_create(dirname(load_log))
     chmod(dirname(load_log), "775")
     
-    res <- system(glue("cd {values$dir_ecodata_branch}; Rscript {load_R} 2>{load_log}"), intern = T)
+    load_cmd <- glue("cd {values$dir_ecodata_branch}; Rscript {load_R} 2>{load_log}")
+    
+    #stop(paste("load_cmd DEBUG:\n\n----\n",  load_cmd))
+    # cd /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater; Rscript /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater/data-raw/get_slopewater.R 2>/share/github/iea-uploader/www/figures/bdbest@gmail.com/slopewater_load_Rlog.txt
+    # cd /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater; Rscript /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater/data-raw/get_slopewater.R 2>/share/github/iea-uploader/www/figures/bdbest@gmail.com/slopewater_load_Rlog.txt
+    # browser()
+    res <- system(load_cmd, intern = T)
+    
+    # values = list(
+    #   dir_ecodata_branch="/share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater")
+    # dataset = list(dataset_code)
+    # load_R = glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
+    # 
+    # ls -la /share/github/iea-uploader/www/figures/bdbest@gmail.com/slopewater_load_Rlog.txt
+    # 
+    # load("/share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater/data/slopewater.rda")
+    # tail(slopewater)
+    # View(slopewater)
+    # browser()
     
     # catch error
     if (!is.null(attr(res, "status")) && attr(res, "status") == 1){
@@ -670,6 +689,7 @@ server <- function(input, output, session) {
 
     # load new data ----
     data <- load_data(dataset)
+    # browser()
 
     message(glue("in output$figs about to plot"))
     
@@ -724,6 +744,7 @@ server <- function(input, output, session) {
           library(here)
           
           {setup_R}
+          devtools::load_all('{values$dir_ecodata_branch}')
           source(here('chunk-scripts/{plot_chunk}'))
         
           ggsave('{plot_png}', width = {fig_width_in}, height = {fig_height_in}, dpi = {fig_dpi})") # cat(plot_code)
@@ -773,7 +794,34 @@ server <- function(input, output, session) {
     
     dataset <- get_dataset()
     
-    get(dataset$dataset_code, pos = "package:ecodata")
+    
+    # dataset <- list(
+    #   dataset_code = "slopewater")
+    # values <- list(
+    #   dir_ecodata_branch = "/share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater")
+    
+    #d0 <- get(dataset$dataset_code, pos = "package:ecodata")
+    
+    load_all(values$dir_ecodata_branch)
+    
+    #slopewater
+    #d1 <- get(dataset$dataset_code, pos = "package:ecodata")
+    
+    # browser()
+    d <- get(dataset$dataset_code, pos = "package:ecodata")
+    # TODO: not fetching updated
+    # rda <- glue("{values$dir_ecodata_branch}/data/{dataset$dataset_code}.rda")
+    # d <- read_rds(rda)
+    # dat.s3 <- miceadds::load.Rdata2( filename="data_s3.Rdata")
+    # readRDS()
+    # slopewater %>% tail()
+    # slopewater %>% summary()
+    # load(rda)
+    # local({
+    #   load(rda)
+    #   ls()
+    # })
+    d
   })
   
   # output$uiSubmit ----

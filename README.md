@@ -2,6 +2,17 @@
 
 Shiny app for dataset uploading, checking and visualization
 
+## debug
+
+See files on admin@rstudio.iea-demo.us:
+
+```
+~/shiny-logs
+~/github/iea-uploader
+~/github/iea-uploader/www/figures/{email}/{dataset}
+```
+
+
 ## setup
 
 From admin@rstudio.iea-demo.us in Terminal:
