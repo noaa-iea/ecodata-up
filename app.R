@@ -208,21 +208,25 @@ server <- function(input, output, session) {
       GITHUB_USER=bbest
       
       # get latest
-      #git fetch -p
+      git fetch -p
       
       # delete local branch if exists
-      #if [ `git branch --list {values$git_branch}` ]
-      #then
-      #  echo 'deleting local branch {values$git_branch}'
-      #  git branch -D {values$git_branch}
-      #fi
+      if [ `git branch --list {values$git_branch}` ]
+      then
+        echo 'deleting local branch {values$git_branch}'
+        git branch -D {values$git_branch}
+      fi
       
       # delete remote branch if exists
-      #if [ `git branch -r | grep '{values$git_branch}' | wc -l` == '1' ]
-      #then
-      #  echo 'deleting remote branch {values$git_branch}'
-      #  git push origin --delete {values$git_branch}
-      #fi
+      if [ `git branch -r | grep '{values$git_branch}' | wc -l` == '1' ]
+      then
+        echo 'deleting remote branch {values$git_branch}'
+        git push origin --delete {values$git_branch}
+      fi
+      
+      # TODO: check that actually deletes
+      # git remote update origin --prune
+      # git branch -a
       
       # branch and reset
       cd {values$dir_ecodata_branch}
@@ -715,10 +719,10 @@ server <- function(input, output, session) {
     rmd_grp     <- str_replace(plot_chunks[1], "^(.*)(\\.Rmd.*)$", "\\1")
     
     plot_chunk_to_tab_panel <- function(plot_chunk){
-      
+      # plot_chunk = "LTL_MAB.Rmd-bottom-temp.R"
       plot_rgn <- ifelse(
         length(plot_chunks) > 1,
-        str_replace(plot_chunk, "^(.*?)(\\.Rmd)-(.*?)-(.*)\\.R$", "\\3"),
+        str_replace(plot_chunk, "^(.*?)_(.*?)(\\.Rmd)-(.*)\\.R$", "\\2"),
         "plot")
       
       plot_pfx <- glue(

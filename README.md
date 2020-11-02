@@ -8,9 +8,13 @@ See files on admin@rstudio.iea-demo.us:
 
 ```
 ~/shiny-logs
-~/github/iea-uploader
-~/github/iea-uploader/www/figures/{email}/{dataset}
+~/github/iea-uploader/www/figures/{email}/{dataset}/*
+- {dataset}_load_Rlog.txt
+- {dataset}_plot.R
+- {dataset}_plot_Rlog.txt
+- {dataset}_plot.png
 ```
+
 
 
 ## setup
