@@ -1,0 +1,28 @@
+---
+title: "get_datasets"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+dir_ecodata <- "/share/github/ecodata_uploader/ecodata"
+
+library(devtools)
+load_all(dir_ecodata)
+
+datasets <- data(package = "ecodata")
+ds_name <- datasets$results[[1,3]]
+data(ds_name, package = "ecodata")
+ds <- get(ds_name)
+attributes(ds)
+attr(ds, "names")
+
+attr(aggregate_biomass, "data_steward")
+
+setwd(dir_ecodata)
+source(here::here("data-raw/get_aggregate_biomass.R"))
+```
+
