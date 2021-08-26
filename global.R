@@ -113,12 +113,16 @@ datasets <- datasets_all %>%
   mutate(
     tech_doc_url = map_chr(tech_doc_url, 1))
 
+admin_emails <- c("benjamin.best@noaa.gov")
 datasets_stewards <- datasets %>% 
   select(dataset_id, tech_doc_url, data_steward) %>% 
   unnest(data_steward) %>% 
   mutate(
     steward = str_replace(data_steward, "(.*)<(.*)>", "\\1") %>% str_trim(),
-    email   = str_replace(data_steward, "(.*)<(.*)>", "\\2"))
+    email   = str_replace(data_steward, "(.*)<(.*)>", "\\2")) %>% 
+  bind_rows(
+    datasets
+  )
 
 dir_plotR <- glue("{dir_ecodata_src}/chunk-scripts")
 
@@ -143,47 +147,44 @@ datasets_plotR <- plotRs %>% filter(n_datasets == 1) %>% pull(dataset_ids) %>% u
 
 # datasets missing plotR (see plotRs without dataset)
 datasets_not1plotR <- setdiff(datasets$dataset_id, datasets_plotR)
-glue("- [ ] {datasets_not1plotR}")
+# glue("- [ ] {datasets_not1plotR}")
 # - [ ] ESP_seasonal_oisst_anom
 # - [ ] hp_density
 # - [ ] seasonal_sst_anomaly_gridded
 
 # plotRs without dataset -- typically missing ecodata:: prefix to dataset
-plotRs %>% 
-  filter(n_datasets == 0) %>% 
-  pull(plotR_datasets) %>% 
-  paste(collapse = "\n") %>% 
-  cat()
+# plotRs %>% 
+#   filter(n_datasets == 0) %>% 
+#   pull(plotR_datasets) %>% 
+#   paste(collapse = "\n") %>% 
+#   cat()
   
 
-plotRs %>% 
-  filter(n_datasets > 1) %>% 
-  pull(plotR_datasets) %>% 
-  paste(collapse = "\n") %>% 
-  cat()
+# plotRs %>% 
+#   filter(n_datasets > 1) %>% 
+#   pull(plotR_datasets) %>% 
+#   paste(collapse = "\n") %>% 
+#   cat()
   
 
-plotRs %>% 
-  filter(n_datasets == 1) %>%
-  select(dataset_id = dataset_ids, plotR) %>% 
-  group_by(dataset_id) %>% 
-  nest() %>% 
-  mutate(
-    n_plotR = map_int(data, nrow)) %>% 
-  unnest(data) %>% 
-  select(dataset_id, n_plotR, plotR) %>% 
-  mutate(
-    dataset_plotR = glue("- [ ] {dataset_id} (n={n_plotR}): {plotR}")) %>% 
-  pull(dataset_plotR) %>% 
-  paste(collapse = "\n") %>% 
-  cat()
-
+# plotRs %>% 
+#   filter(n_datasets == 1) %>%
+#   select(dataset_id = dataset_ids, plotR) %>% 
+#   group_by(dataset_id) %>% 
+#   nest() %>% 
+#   mutate(
+#     n_plotR = map_int(data, nrow)) %>% 
+#   unnest(data) %>% 
+#   select(dataset_id, n_plotR, plotR) %>% 
+#   mutate(
+#     dataset_plotR = glue("- [ ] {dataset_id} (n={n_plotR}): {plotR}")) %>% 
+#   pull(dataset_plotR) %>% 
+#   paste(collapse = "\n") %>% 
+#   cat()
 
 # bottomtemp
 # LTL_NE.Rmd-bottom-temp-glorys.R
 
-
-datasets_plotRs <- datasets %>% 
-  mutate(
-    plot_chunks = list.files(dir_chunks)
-  )
+# datasets_plotRs <- datasets %>% 
+#   mutate(
+#     plot_chunks = list.files(dir_chunks))

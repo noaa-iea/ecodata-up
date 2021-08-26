@@ -2,7 +2,7 @@ tagList(
   tags$head(
     tags$meta(name="google-signin-scope",content="profile email"),
     # https://console.developers.google.com/apis/credentials?authuser=1&project=iea-uploader (ben@ecoquants.com as authuser=1)
-    tags$meta(name="google-signin-client_id", content="596429062120-tbgia6e94mtqc8eoo27iqqd7l89s6apr.apps.googleusercontent.com"),
+    tags$meta(name="google-signin-client_id", content="596429062120-780pmct4qg2s5bjfsp21sii1iav86db4.apps.googleusercontent.com"),
     HTML('<script src="https://apis.google.com/js/platform.js?onload=init"></script>'),
     includeScript("signin.js"),
     tags$link(rel = "stylesheet", type = "text/css", href = "style.css"),
