@@ -1,0 +1,106 @@
+---
+title: "Plot Script Dataset Attributes"
+output:
+  html_document:
+    code_folding: hide
+    toc: true
+    toc_depth: 2
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Dataset attribute `plot_script`
+
+Here are the ones found with singular dataset matches. The R code for insertion into the `get_{dataset}.R` script is provided and a short uniquely identifiable title for the tab display is also shown.
+
+```{r}
+librarian::shelf(
+  dplyr, glue, here, NOAA-EDAB/ecodata, DT, purrr, readr, readxl, stringr, tidyr)
+
+dir_ecodata <- "/share/github/ecodata_edab"
+dir_plotr   <- glue("{dir_ecodata}/chunk-scripts")
+
+datatable_btns <- function(...){
+  datatable(
+    ..., 
+    escape = F,
+    extensions = 'Buttons', options = list(
+      dom = 'Bfrtip',
+      buttons = c('copy', 'csv', 'excel'))) }
+
+ds <- data(package = "ecodata") %>% .$results %>% .[,3]
+#datatable(tibble(dataset_id = ds))
+
+d <- tibble(
+  file_plotr   = list.files(dir_plotr, "\\.R$"),
+  component    = str_replace(file_plotr, "^(.*)_(.*?).Rmd-(.*)\\.R$", "\\1"),
+  cmp          = recode(
+    component,
+    human_dimensions = "hd",
+    LTL              = "ltl",
+    macrofauna       = "mf"),
+  region       = str_replace(file_plotr, "^(.*)_(.*?).Rmd-(.*)\\.R$", "\\2"),
+  dataset_dash = str_replace(file_plotr, "^(.*)_(.*?).Rmd-(.*)\\.R$", "\\3"),
+  dataset_sub  = str_replace_all(dataset_dash, "-", "_"),
+  dataset_id   = map_chr(dataset_sub, function(x){
+    y <- str_extract(x, ds) %>% na.omit()
+    y <- ifelse(length(y) == 1, y, NA)
+    y }),
+  part       = map2_chr(dataset_sub, dataset_id, function(sub, id){
+    s <- str_replace(sub, id, "") %>% 
+      str_replace("^_", "") %>% 
+      str_replace("_$", "") %>% 
+      str_replace_all("_", "-") %>% 
+      str_replace_all("[-]{2,}", "-")
+    ifelse(nchar(s) > 0, s, NA) })) %>% 
+  mutate(
+    title = pmap_chr(., function(cmp, region, part, ...){
+      paste(na.omit(c(cmp, region, part)), collapse = "_") })) %>% 
+  arrange(dataset_id, title, file_plotr) %>% 
+  relocate(dataset_id, title, file_plotr)
+
+d_r <- d %>% 
+  filter(!is.na(dataset_id)) %>% 
+  mutate(
+    r_d = glue('`{title}` = "{file_plotr}"')) %>% 
+  select(dataset_id, r_d) %>% 
+  nest(r_d = r_d) %>% 
+  mutate(
+    r = map2_chr(dataset_id, r_d, function(id, r_d){
+      glue(
+        'attr({id}, "plot_script") <- list(<br>
+          {paste(unlist(r_d), collapse = ",<br>")})')})) %>% 
+  select(-r_d)
+#write_csv(d_r, here("data/tmp_dataset_plot_files_attr.csv"))
+
+datatable_btns(d_r)
+```
+
+
+# Plot scripts missing dataset
+
+If no dataset match is found or if more than one are possible, the plot script is not assigned to a dataset, but could be manually added to the attribute section of the `get_{dataset}.R` script.
+
+```{r}
+d %>% 
+  filter(is.na(dataset_id)) %>% 
+  select(plot_script_ambiguous_dataset = file_plotr) %>% 
+  datatable_btns()
+```
+
+
+# Datasets missing `plot_script`
+
+These are datasets for which no matching plot script could be found.
+
+```{r}
+datatable_btns(tibble(
+  dataset_missing_plot_script = setdiff(ds, d$dataset_id)))
+```
+
+
+
