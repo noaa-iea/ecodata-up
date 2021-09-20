@@ -6,7 +6,12 @@ Shiny app for dataset uploading, checking and visualization
 
 Main Shiny app: [shiny.ecoquants.com/ecodata-up](https://shiny.ecoquants.com/ecodata-up/)
 
+
 ## html
+
+- [dataset-attr_plot-script](https://noaa-iea.github.io/ecodata-up/dataset-attr_plot-script.html) ([source](https://github.com/noaa-iea/ecodata-up/blob/master/dataset-attr_plot-script.Rmd))
+
+## html, auto 
 
 To see this html listing, visit [noaa-iea.github.io/ecodata-up](https://noaa-iea.github.io/ecodata-up).
 
