@@ -4,7 +4,7 @@ output:
   html_document:
     code_folding: hide
     toc: true
-    toc_depth: 2
+    toc_depth: 3
 editor_options: 
   chunk_output_type: console
 ---
@@ -80,8 +80,43 @@ d_r <- d %>%
 datatable_btns(d_r)
 ```
 
+### Issues
 
-# Plot scripts missing dataset
+- dataset `energy_density` missing `get_energy_density.R`
+- dataset `ichthyo_diversity` -> `get_ichthyoplankton.R`?
+- dataset `recdat` -> `get_rec.R`?
+- dataset `seal_pups` missing `get_seal_pups.R`
+- dataset `stock_status` missing `get_stock_status.R`; use `get_stocks.R`?
+- dataset `wcr` missing `get_wcr.R`; use `get_warm_core_rings.R`?
+- dataset `zoo_abund` missing `get_zoo_abund.R`; use `get_zoo_abun_anom.R`?
+- dataset `zoo_diversity` missing `get_zoo_diversity.R`; use `get_zoo_div.R`?
+- dataset `zoo_sli_anom` missing `get_zoo_sli_anom.R`; use `get_zoo_anom_sli.R`?
+- dataset `zoo_strat_abun` missing `get_zoo_strat_abun.R`; use `get_zoo_*.R`?
+
+Sourcing:
+
+- dataset `seasonal_sst_anomaly_gridded`, sourcing `get_seasonal_sst_anomaly_gridded.R`:
+  ```
+  Error in R_nc4_open: No such file or directory
+  Error in h(simpleError(msg, call)) : 
+    error in evaluating the argument 'x' in selecting a method for function 'rotate': Error in nc_open trying to open file ~/github/ecodata_bbest/data-raw/sst.day.mean.2020.nc
+  ```
+- dataset `seasonal_oisst_anom`, sourcing `get_seasonal_oisst_anom.R`:
+  ```
+  Error in R_nc4_open: No such file or directory
+  Error in ncdf4::nc_open(filename, readunlim = FALSE, suppress_dimvals = TRUE) : 
+    Error in nc_open trying to open file ~/github/ecodata_bbest/data-raw/gridded/sst.day.mean.ltm.1982-2010.nc
+  ```
+- dataset `phyto_size`, sourcing `get_phyto_size.R`:
+  ```
+  Error in file(file, "rt") : cannot open the connection
+  In addition: Warning message:
+  In file(file, "rt") :
+    cannot open file '~/github/ecodata_bbest/data-raw/1998_2020-OCCCI-PHYSIZE-STATS-NES_EPU_NOESTUARIES-V2021-SOE_FORMAT.csv': No such file or directory
+  ```
+
+    
+## Plot scripts missing dataset
 
 If no dataset match is found or if more than one are possible, the plot script is not assigned to a dataset, but could be manually added to the attribute section of the `get_{dataset}.R` script.
 
@@ -93,7 +128,7 @@ d %>%
 ```
 
 
-# Datasets missing `plot_script`
+## Datasets missing `plot_script`
 
 These are datasets for which no matching plot script could be found.
 
