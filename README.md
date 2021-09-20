@@ -2,6 +2,23 @@
 
 Shiny app for dataset uploading, checking and visualization
 
+## app
+
+Main Shiny app: [shiny.ecoquants.com/ecodata-up](https://shiny.ecoquants.com/ecodata-up/)
+
+## html
+
+To see this html listing, visit [noaa-iea.github.io/ecodata-up](https://noaa-iea.github.io/ecodata-up).
+
+These web pages (\*.html) are typically rendered from Rmarkdown (\*.Rmd):
+
+<!-- Jekyll rendering: https://marineenergy.github.io/apps/ -->
+{% for file in site.static_files %}
+  {% if file.extname == '.html' %}
+* [{{ file.basename }}]({{ site.baseurl }}{{ file.path }})
+  {% endif %}
+{% endfor %}
+
 ## debug
 
 See files on admin@rstudio.iea-demo.us:
