@@ -129,9 +129,17 @@ datasets_stewards <- datasets_all %>%
     email   = str_replace(data_steward, "(.*)<(.*)>", "\\2"))
 
 datasets <- datasets_all %>%
-  filter(has_data, has_steward, has_doc, has_files, has_plots) %>% 
+  #filter(has_data, has_steward, has_doc, has_files, has_plots) %>% 
+  filter(has_data, has_steward, has_files, has_plots) %>% 
   mutate(
-    tech_doc_url = map_chr(tech_doc_url, 1))
+    datafile1_ext = map_chr(data_files, 1) %>% fs::path_ext(),
+    tech_doc_url  = map_chr(tech_doc_url, 1)) %>% 
+  filter(
+    datafile1_ext %in% c("csv", "xlsx"))
+# datasets %>% select(dataset_id, datafile1_ext)
+# table(datasets$datafile1_ext)
+# csv    nc   Rda Rdata RData   rds  xlsx 
+# 18     1     1     2     5     1     8
 
 # admins already handled with: server.R get_datasets() using admin_emails
 # datasets_admins <- expand_grid(
