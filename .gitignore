@@ -8,3 +8,4 @@ data/users.sqlite
 www/figures/*
 # exception to the rule
 !www/figures/.gitkeep 
+test/*

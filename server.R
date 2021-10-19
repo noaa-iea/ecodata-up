@@ -42,6 +42,73 @@ server <- function(input, output, session) {
     values$submit_success <- F
   })
   
+  # load_data ----
+  load_data <- function(dataset){
+    
+    values$load_success <- F
+    
+    #dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
+    #dataset_files <- dataset$data_files %>% unlist()
+    
+    files_dest <- glue("{values$dir_ecodata_branch}/data-raw/{file_input()$name}")
+    
+    file_move(file_input()$datapath, files_dest)
+    walk(files_dest, chmod, mode = "775")
+    
+    message(glue('Sys.info()[["effective_user"]]: {Sys.info()[["effective_user"]]}'))
+    
+    load_R <- glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_id}.R")
+    load_log <- glue(
+      "{dir_uploader}/www/figures/{input$g_email}/{dataset$dataset_id}_load_Rlog.txt")
+    
+    dir_create(dirname(load_log))
+    #browser()
+    chmod(dirname(load_log), "775")
+    
+    load_cmd <- glue("cd {values$dir_ecodata_branch}; Rscript {load_R} 2>{load_log}")
+    
+    #stop(paste("load_cmd DEBUG:\n\n----\n",  load_cmd))
+    # cd /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater; Rscript /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater/data-raw/get_slopewater.R 2>/share/github/iea-uploader/www/figures/bdbest@gmail.com/slopewater_load_Rlog.txt
+    # cd /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater; Rscript /share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater/data-raw/get_slopewater.R 2>/share/github/iea-uploader/www/figures/bdbest@gmail.com/slopewater_load_Rlog.txt
+    # browser()
+    res <- system(load_cmd, intern = T)
+    
+    # values = list(
+    #   dir_ecodata_branch="/share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater")
+    # dataset = list(dataset_code)
+    # load_R = glue("{values$dir_ecodata_branch}/data-raw/get_{dataset$dataset_code}.R")
+    # 
+    # ls -la /share/github/iea-uploader/www/figures/bdbest@gmail.com/slopewater_load_Rlog.txt
+    # 
+    # load("/share/github/ecodata_uploader/ecodata_bdbest@gmail.com_slopewater/data/slopewater.rda")
+    # tail(slopewater)
+    # View(slopewater)
+    # browser()
+    
+    # catch error
+    if (!is.null(attr(res, "status")) && attr(res, "status") == 1){
+      log <- readLines(load_log) %>% paste(collapse = "\n") # %>% cat()
+      stop(
+        # cat(
+          paste(
+        "loading dataset within ecodata R package:\n\n----\n", 
+        glue("source(data-raw/get_{dataset$dataset_id}.R)"), 
+        "\n----\nHere is a log of messages from running above code:\n----\n", 
+        log, 
+        "\n----\nPlease try uploading fixed file(s).")
+        # )
+        )
+    }
+    
+    load_all(values$dir_ecodata_branch)
+    
+    d <- get(dataset$dataset_id, pos = "package:ecodata")
+    
+    values$load_success <- T
+    
+    d
+  }
+  
   # observe dataset selection ----
   observeEvent(input$dt_datasets_rows_selected, {
     values$load_success   <- F
@@ -69,7 +136,7 @@ server <- function(input, output, session) {
     # setup once on server in Terminal:
     #
     # # install hub
-    # sudo ap-get update; sudo apt-get install hub
+    # sudo apt-get update; sudo apt-get install hub
     #
     # # set github username default for user shiny
     # sudo su - shiny
@@ -86,6 +153,11 @@ server <- function(input, output, session) {
     
     dataset <- get_dataset()
     
+    gh_pat <- readLines("/share/iea-uploader_github-personal-access-token_bbest.txt")
+    Sys.setenv(GITHUB_TOKEN = gh_pat)
+    
+    #browser()
+
     if (nrow(dataset) == 1 & values$load_success & values$plot_success){
       # branch ecodata src
       
@@ -220,8 +292,8 @@ server <- function(input, output, session) {
     
     get_datasets() %>% 
       mutate(
-        dataset_url = glue("<a href='{tech_doc_url}' target='_blank'>{dataset_id}</a>")) %>% 
-      select(dataset_url)
+        dataset_id = glue("<a href='{tech_doc_url}' target='_blank'>{dataset_id}</a>")) %>% 
+      select(dataset_id)
   }, 
   selection = "single",
   style     = "bootstrap", 
@@ -251,12 +323,15 @@ server <- function(input, output, session) {
       file_url_pfx <- "https://github.com/NOAA-EDAB/ecodata/blob/master/data-raw"
       file_links   <- lapply(files, function(f) a(f, href = glue("{file_url_pfx}/{f}"), target="_blank")) %>% tagList()
 
-      browser()
+      #browser()
       tagList(
         glue("Please upload the following {length(files)} {ifelse(is_files, 'files', 'file')} (or as sheets without the '.csv' in an Excel file):"), file_links, ".", br(), br(),
+        
+        # TODO: ch_bay_sal: SR_Salinity.csv has no headers so 
         preview_csv(file1_csv, is_files),br(),br(),
+        
         "These files will be processed with the following:",
-        get_Rfiles())
+        get_Rfiles(dataset))
     }
   })
   
@@ -289,13 +364,14 @@ server <- function(input, output, session) {
     
     # validate uploaded files ----
     
-    #browser()
-    dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
+    # browser()
+    #dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
+    data_files <- dataset$data_files %>% unlist()
     
     message(glue("in output$figs about to validate"))
     
-    missing_files <- setdiff(dataset_files, file_input()$name) %>% paste(collapse = ", ")
-    extra_files   <- setdiff(file_input()$name, dataset_files) %>% paste(collapse = ", ")
+    missing_files <- setdiff(data_files, file_input()$name) %>% paste(collapse = ", ")
+    extra_files   <- setdiff(file_input()$name, data_files) %>% paste(collapse = ", ")
     
     validate(
       need(
@@ -311,19 +387,21 @@ server <- function(input, output, session) {
     
     # validate uploaded fields ----
     d_files <- tibble(
-      dfile = str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()) %>% 
+      # dfile = str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()) %>% 
+      dfile = data_files) %>% 
       mutate(
         fld_dataset = T,
         path = glue("{values$dir_ecodata_branch}/data-raw/{dfile}")) %>% 
       get_flds_type()
     
+    # browser()
     u_files <- file_input() %>% 
       as_tibble() %>% 
       select(dfile = name, path = datapath) %>% 
       mutate(
         fld_upload = T) %>% 
       get_flds_type()
-    u_files
+    #u_files
     
     du_files <- d_files %>% 
       full_join(
@@ -385,14 +463,17 @@ server <- function(input, output, session) {
     # plot_pfx <- here(glue("data/{input$g_email}/{dataset$dataset_code}/{dataset$dataset_code}"))
     # dir_create(dirname(plot_pfx))
     
-    plot_chunks <- str_split(dataset$plot_chunks, ", ", simplify=T) %>% as.vector()
-    rmd_grp     <- str_replace(plot_chunks[1], "^(.*)(\\.Rmd.*)$", "\\1")
+    # plot_chunks <- str_split(dataset$plot_chunks, ", ", simplify=T) %>% as.vector()
+    plot_scripts <- dataset$plot_scripts %>% unlist()
+    rmd_grp      <- str_replace(plot_scripts[1], "^(.*)(\\.Rmd.*)$", "\\1")
 
     tabset <- do.call(
       tabsetPanel,
       lapply(
-        plot_chunks, 
-        plot_chunk_to_tab_panel))
+        # plot_chunks, 
+        # plot_chunk_to_tab_panel))
+        names(plot_scripts), 
+        plot_chunk_to_tab_panel, plot_scripts, dataset, input$g_email, values$dir_ecodata_branch, rmd_grp, fig_width_in, fig_height_in, fig_dpi))
     
     message(glue("in output$figs values$plot_success"))
     values$plot_success <- T    

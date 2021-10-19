@@ -11,7 +11,7 @@ shelf(
   dplyr,
   devtools,
   DT,
-  bbest/ecodata,
+  NOAA-EDAB/ecodata, # bbest/ecodata, # load_all(dir_ecodata_src) # install_local(dir_ecodata_src)
   fs,
   ggiraph,
   ggplot2,
@@ -20,6 +20,7 @@ shelf(
   grid,
   heatwaveR,
   here,
+  janitor,
   kableExtra,
   knitr,
   magrittr,
@@ -41,15 +42,18 @@ shelf(
 select = dplyr::select
 source(here("functions.R"))
 
-options(shiny.maxRequestSize = 30*1024^2) # 30MB limit
+options(
+  shiny.maxRequestSize = 30*1024^2,
+  readr.show_col_types = FALSE) # 30MB limit
 
 # variables ----
 admin_emails     <- c("ben@ecoquants.com", "kimberly.bastille@noaa.gov", "andrew.beet@noaa.gov")
 #dir_ecodata_src  <- "/share/github/ecodata_uploader/ecodata"
-dir_ecodata_src  <- "/share/github/ecodata_edab"
-dir_uploader     <- here()
+dir_uploader     <- here()                                   # TODO: -> dir_up
+dir_ecodata_src  <- "/share/github/ecodata_edab"             # TODO: -> dir_ecodata
+dir_plotr        <- glue("{dir_ecodata_src}/chunk-scripts")  # TODO: -> dir_plotr
 
-load_all(dir_ecodata_src)
+# load_all(dir_ecodata_src) # install_local(dir_ecodata_src)
 
 # datasets <- list(
 #   name      = "SOE 2020 Contributors (copy 2020-04-24)",
@@ -73,8 +77,11 @@ datasets_all <- tibble(
       attr(data, "data_steward")}),
     tech_doc_url = map(data, function(data){
       attr(data, "tech-doc_url")}),
-    data_files = map(data, function(data){
+    data_files   = map(data, function(data){
       attr(data, "data_files") %>% 
+        unlist()}),
+    plot_scripts  = map(data, function(data){
+      attr(data, "plot_script") %>% 
         unlist()}),
     has_data = map_lgl(data, function(data){
       if (length(data) == 1 && is.na(data[[1]]))
@@ -82,13 +89,14 @@ datasets_all <- tibble(
       T}),
     has_steward = map_lgl(data_steward, not_null),
     has_doc     = map_lgl(tech_doc_url, not_null),
-    has_files   = map_lgl(data_files  , not_null))
+    has_files   = map_lgl(data_files  , not_null),
+    has_plots   = map_lgl(plot_scripts, not_null))
 
 datasets_todo <- datasets_all %>% 
   select(dataset_id, starts_with("has")) %>% 
   rowwise() %>% 
   mutate(
-    has_missing = any(!has_data, !has_steward, !has_doc, !has_files)) %>% 
+    has_missing = any(!has_data, !has_steward, !has_doc, !has_files, !has_plots)) %>% 
   filter(has_missing) %>% 
   select(-has_missing)
 
@@ -106,47 +114,82 @@ dataset_techdocurls <- datasets_all %>%
 
 dataset_datafiles <- datasets_all %>% 
   select(dataset_id, data_files) %>% 
-  unnest(data_files)
+  unnest(data_files) %>% 
+  arrange(dataset_id, data_files)
 
-datasets <- datasets_all %>%
-  filter(has_data, has_steward, has_doc, has_files) %>% 
-  mutate(
-    tech_doc_url = map_chr(tech_doc_url, 1))
+dataset_plotscripts <- datasets_all %>% 
+  select(dataset_id, plot_scripts) %>% 
+  unnest(plot_scripts)
 
-admin_emails <- c("benjamin.best@noaa.gov")
-datasets_stewards <- datasets %>% 
+datasets_stewards <- datasets_all %>% 
   select(dataset_id, tech_doc_url, data_steward) %>% 
   unnest(data_steward) %>% 
   mutate(
     steward = str_replace(data_steward, "(.*)<(.*)>", "\\1") %>% str_trim(),
-    email   = str_replace(data_steward, "(.*)<(.*)>", "\\2")) %>% 
-  bind_rows(
-    datasets
-  )
+    email   = str_replace(data_steward, "(.*)<(.*)>", "\\2"))
 
-dir_plotR <- glue("{dir_ecodata_src}/chunk-scripts")
-
-plotRs <- tibble(
-  plotR = list.files(dir_plotR, "\\.R$")) %>% 
+datasets <- datasets_all %>%
+  filter(has_data, has_steward, has_doc, has_files, has_plots) %>% 
   mutate(
-    txt            = map_chr(plotR, function(plotR){
-      readLines(path(dir_plotR, plotR)) %>% paste(collapse = "\n")}),
-    dataset_id     = map(txt, function(txt){
-      str_match(txt, glue("ecodata::{datasets_all$dataset_id}"))[,1] %>% 
-        na.omit() %>% 
-        str_replace("ecodata::", "")}),
-    n_datasets     = map_int(dataset_id, length),
-    dataset_ids    = map_chr(dataset_id, paste, collapse = ", "),
-    plotR_datasets = glue("- [ ] {plotR} (n={n_datasets}): {dataset_ids}"))
-# View(plotRs)
+    tech_doc_url = map_chr(tech_doc_url, 1))
 
-datasets_plotR <- plotRs %>% filter(n_datasets == 1) %>% pull(dataset_ids) %>% unique() %>% sort()
+# admins already handled with: server.R get_datasets() using admin_emails
+# datasets_admins <- expand_grid(
+#   dataset_id = datasets$dataset_id, 
+#   email      = admin_emails,
+#   is_admin   = TRUE)
+# 
+# datasets_stewards <- datasets_stewards %>% 
+#   full_join(
+#     datasets_admins,
+#     by = c("dataset_id",  "email")) %>% 
+#   arrange(dataset_id, email) # %>% View()
+  
+# dataset_id = "ch_bay_sal"
+
+
+# plotRs <- tibble(
+#   file_plotr = list.files(dir_plotR, "\\.R$")) %>% 
+#   mutate(
+#     # txt            = map_chr(plotR, function(plotR){
+#     #   readLines(path(dir_plotR, plotR)) %>% paste(collapse = "\n")}),
+#     # dataset_id     = map(txt, function(txt){
+#     #   str_match(txt, glue("ecodata::{datasets_all$dataset_id}"))[,1] %>% 
+#     #     na.omit() %>% 
+#     #     str_replace("ecodata::", "")}),
+#     dataset_id     = map(file_plotr, function(txt){
+#       
+#       
+#     a <-  # %>% 
+#       
+#         full_join(
+#           tibble(
+#             dataset_id = datasets_all$dataset_id,
+#             src_datasets = T),
+#           by = "dataset_id") %>% 
+#         arrange(dataset_id, src_datasets, file_plotr) %>% 
+#         write_csv(here("data/tmp_plotr_dataset_match.csv"))
+#       
+#       str_match(txt, glue("ecodata::{datasets_all$dataset_id}"))[,1] %>% 
+#         na.omit() %>% 
+#         str_replace("ecodata::", "")}),
+#     title = map_chr(plotR, function(x){
+#       x %>% 
+#         str_replace(".Rmd", ":")
+#     }),
+#     n_datasets     = map_int(dataset_id, length),
+#     dataset_ids    = map_chr(dataset_id, paste, collapse = ", "),
+#     plotR_datasets = glue("- [ ] {plotR} (n={n_datasets}): {dataset_ids}"))
+# # View(plotRs)
+# 
+# 
+# datasets_plotR <- plotRs %>% filter(n_datasets == 1) %>% pull(dataset_ids) %>% unique() %>% sort()
 
 # headers in plot?
 # plotRs %>% filter(n_datasets == 1) %>% arrange(dataset_ids) %>% select(dataset_ids, plotR) %>% View()
 
 # datasets missing plotR (see plotRs without dataset)
-datasets_not1plotR <- setdiff(datasets$dataset_id, datasets_plotR)
+# datasets_not1plotR <- setdiff(datasets$dataset_id, datasets_plotR)
 # glue("- [ ] {datasets_not1plotR}")
 # - [ ] ESP_seasonal_oisst_anom
 # - [ ] hp_density

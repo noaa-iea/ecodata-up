@@ -1,0 +1,180 @@
+dataset_id,r
+aggregate_biomass,"attr(aggregate_biomass, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-aggregate-biomass.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-aggregate-biomass.R\")"
+aquaculture,"attr(aquaculture, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-aquaculture.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-aquaculture.R\",
+`hd_NE_pa` = \"human_dimensions_NE.Rmd-aquaculture-pa.R\",
+`hd_NE_pieces` = \"human_dimensions_NE.Rmd-aquaculture-pieces.R\")"
+bennet,"attr(bennet, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-bennet.R\",
+`hd_MAB_2` = \"human_dimensions_MAB.Rmd-bennet2.R\",
+`hd_MAB_all` = \"human_dimensions_MAB.Rmd-bennet-all.R\",
+`hd_MAB_table` = \"human_dimensions_MAB.Rmd-bennet-table.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-bennet.R\",
+`hd_NE_2` = \"human_dimensions_NE.Rmd-bennet2.R\",
+`hd_NE_all` = \"human_dimensions_NE.Rmd-bennet-all.R\")"
+blue_runner,"attr(blue_runner, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-blue-runner.R\")"
+bottom_temp,"attr(bottom_temp, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-bottom-temp.R\",
+`ltl_NE` = \"LTL_NE.Rmd-bottom-temp.R\",
+`ltl_NE_gb` = \"LTL_NE.Rmd-bottom-temp-gb.R\",
+`ltl_NE_gom` = \"LTL_NE.Rmd-bottom-temp-gom.R\")"
+calanus_stage,"attr(calanus_stage, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-calanus-stage.R\",
+`ltl_NE_gb` = \"LTL_NE.Rmd-gb-calanus-stage.R\",
+`ltl_NE_gom` = \"LTL_NE.Rmd-gom-calanus-stage.R\",
+`ltl_NE_gom-old` = \"LTL_NE.Rmd-gom-calanus-stage-old.R\")"
+ch_bay_sal,"attr(ch_bay_sal, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-ch-bay-sal.R\")"
+ch_bay_temp,"attr(ch_bay_temp, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-ch-bay-temp.R\")"
+ches_bay_wq,"attr(ches_bay_wq, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-ches-bay-wq.R\")"
+chl_pp,"attr(chl_pp, \"plot_files\") <- list(
+          `ltl_NE_anom` = \"LTL_NE.Rmd-chl-pp-anom.R\")"
+cold_pool,"attr(cold_pool, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-cold_pool.R\",
+`ltl_MAB_map` = \"LTL_MAB.Rmd-cold_pool_map.R\",
+`ltl_MAB_map2` = \"LTL_MAB.Rmd-cold_pool_map2.R\")"
+comdat,"attr(comdat, \"plot_files\") <- list(
+          `hd_MAB_comm-revenue` = \"human_dimensions_MAB.Rmd-comdat-comm-revenue.R\",
+`hd_MAB_commercial-landings` = \"human_dimensions_MAB.Rmd-comdat-commercial-landings.R\",
+`hd_MAB_total-landings` = \"human_dimensions_MAB.Rmd-comdat-total-landings.R\",
+`hd_NE_comm-revenue` = \"human_dimensions_NE.Rmd-comdat-comm-revenue.R\",
+`hd_NE_commercial-landings` = \"human_dimensions_NE.Rmd-comdat-commercial-landings.R\",
+`hd_NE_commercial-landings-gb` = \"human_dimensions_NE.Rmd-comdat-commercial-landings-gb.R\",
+`hd_NE_commercial-landings-gom` = \"human_dimensions_NE.Rmd-comdat-commercial-landings-gom.R\",
+`hd_NE_total-landings` = \"human_dimensions_NE.Rmd-comdat-total-landings.R\")"
+commercial_div,"attr(commercial_div, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-commercial-div.R\",
+`hd_MAB_species-div` = \"human_dimensions_MAB.Rmd-commercial-div-species-div.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-commercial-div.R\",
+`hd_NE_species-div` = \"human_dimensions_NE.Rmd-commercial-div-species-div.R\")"
+energy_density,"attr(energy_density, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-energy-density.R\")"
+engagement,"attr(engagement, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-engagement.R\",
+`hd_MAB_commercial` = \"human_dimensions_MAB.Rmd-commercial-engagement.R\",
+`hd_MAB_recreational` = \"human_dimensions_MAB.Rmd-recreational-engagement.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-engagement.R\",
+`hd_NE_commercial` = \"human_dimensions_NE.Rmd-commercial-engagement.R\",
+`hd_NE_recreational` = \"human_dimensions_NE.Rmd-recreational-engagement.R\")"
+exp_n,"attr(exp_n, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-exp-n.R\",
+`mf_MAB_spring` = \"macrofauna_MAB.Rmd-exp-n-spring.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-exp-n.R\",
+`mf_NE_spring` = \"macrofauna_NE.Rmd-exp-n-spring.R\")"
+forage_anomaly,"attr(forage_anomaly, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-forage-anomaly.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-forage-anomaly.R\")"
+grayseal,"attr(grayseal, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-grayseal.R\",
+`mf_MAB_mab` = \"macrofauna_MAB.Rmd-grayseal-mab.R\")"
+gsi,"attr(gsi, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-gsi.R\")"
+habitat_vulnerability,"attr(habitat_vulnerability, \"plot_files\") <- list(
+          `ltl_MAB_mab` = \"LTL_MAB.Rmd-habitat-vulnerability-mab.R\",
+`ltl_NE_ne` = \"LTL_NE.Rmd-habitat-vulnerability-ne.R\")"
+harborporpoise,"attr(harborporpoise, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-harborporpoise.R\")"
+heatwave,"attr(heatwave, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-heatwave.R\",
+`ltl_NE` = \"LTL_NE.Rmd-heatwave.R\",
+`ltl_NE_gb` = \"LTL_NE.Rmd-heatwave-gb.R\",
+`ltl_NE_gom` = \"LTL_NE.Rmd-heatwave-gom.R\",
+`ltl_NE_image` = \"LTL_NE.Rmd-heatwave_image.R\")"
+hms_cpue,"attr(hms_cpue, \"plot_files\") <- list(
+          `mf_MAB_sharks` = \"macrofauna_MAB.Rmd-hms-cpue-sharks.R\")"
+ichthyo_diversity,"attr(ichthyo_diversity, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-ichthyo-diversity.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-ichthyo-diversity.R\",
+`mf_NE_2` = \"macrofauna_NE.Rmd-ichthyo-diversity2.R\")"
+long_term_sst,"attr(long_term_sst, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-long-term-sst.R\")"
+mab_inshore_survey,"attr(mab_inshore_survey, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-mab-inshore-survey.R\")"
+narw,"attr(narw, \"plot_files\") <- list(
+          `mf_MAB_abundance` = \"macrofauna_MAB.Rmd-narw-abundance.R\")"
+ne_inshore_survey,"attr(ne_inshore_survey, \"plot_files\") <- list(
+          `mf_NE` = \"macrofauna_NE.Rmd-ne-inshore-survey.R\")"
+observed_sharks,"attr(observed_sharks, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-observed-sharks.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-observed-sharks.R\")"
+phyto_size,"attr(phyto_size, \"plot_files\") <- list(
+          `ltl_MAB_weekly` = \"LTL_MAB.Rmd-weekly-phyto-size.R\",
+`ltl_NE_weekly` = \"LTL_NE.Rmd-weekly-phyto-size.R\",
+`ltl_NE_weekly-gb` = \"LTL_NE.Rmd-weekly-phyto-size-gb.R\",
+`ltl_NE_weekly-gom` = \"LTL_NE.Rmd-weekly-phyto-size-gom.R\")"
+ppr,"attr(ppr, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-ppr.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-ppr.R\",
+`hd_NE_comp90` = \"human_dimensions_NE.Rmd-ppr_comp90.R\",
+`hd_NE_index` = \"human_dimensions_NE.Rmd-ppr_index.R\",
+`hd_NE_mtl` = \"human_dimensions_NE.Rmd-ppr_mtl.R\")"
+productivity_anomaly,"attr(productivity_anomaly, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-productivity-anomaly.R\",
+`mf_NE_gb` = \"macrofauna_NE.Rmd-productivity-anomaly-gb.R\",
+`mf_NE_gom` = \"macrofauna_NE.Rmd-productivity-anomaly-gom.R\")"
+rec_hms,"attr(rec_hms, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-rec_hms.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-rec_hms.R\")"
+recdat,"attr(recdat, \"plot_files\") <- list(
+          `hd_MAB_div-catch` = \"human_dimensions_MAB.Rmd-recdat-div-catch.R\",
+`hd_MAB_diversity` = \"human_dimensions_MAB.Rmd-recdat-diversity.R\",
+`hd_MAB_effort` = \"human_dimensions_MAB.Rmd-recdat-effort.R\",
+`hd_MAB_landings` = \"human_dimensions_MAB.Rmd-recdat-landings.R\",
+`hd_NE_div-catch` = \"human_dimensions_NE.Rmd-recdat-div-catch.R\",
+`hd_NE_diversity` = \"human_dimensions_NE.Rmd-recdat-diversity.R\",
+`hd_NE_effort` = \"human_dimensions_NE.Rmd-recdat-effort.R\",
+`hd_NE_landings` = \"human_dimensions_NE.Rmd-recdat-landings.R\")"
+seabird_ne,"attr(seabird_ne, \"plot_files\") <- list(
+          `mf_NE_diversity` = \"macrofauna_NE.Rmd-seabird-ne-diversity.R\",
+`mf_NE_map` = \"macrofauna_NE.Rmd-seabird-ne-map.R\",
+`mf_NE_prey-freq` = \"macrofauna_NE.Rmd-seabird-ne-prey-freq.R\",
+`mf_NE_productivity` = \"macrofauna_NE.Rmd-seabird-ne-productivity.R\")"
+seal_pups,"attr(seal_pups, \"plot_files\") <- list(
+          `mf_NE` = \"macrofauna_NE.Rmd-seal-pups.R\")"
+seasonal_oisst_anom,"attr(seasonal_oisst_anom, \"plot_files\") <- list(
+          `ltl_NE` = \"LTL_NE.Rmd-seasonal-oisst-anom.R\")"
+seasonal_sst_anomaly_gridded,"attr(seasonal_sst_anomaly_gridded, \"plot_files\") <- list(
+          `ltl_MAB_shelf` = \"LTL_MAB.Rmd-shelf-seasonal-sst-anomaly-gridded.R\",
+`ltl_NE` = \"LTL_NE.Rmd-seasonal-sst-anomaly-gridded.R\")"
+slopewater,"attr(slopewater, \"plot_files\") <- list(
+          `ltl_NE` = \"LTL_NE.Rmd-slopewater.R\")"
+species_dist,"attr(species_dist, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-species-dist.R\")"
+stock_status,"attr(stock_status, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-stock-status.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-stock-status.R\")"
+stom_fullness,"attr(stom_fullness, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-stom-fullness.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-stom-fullness.R\")"
+survey_shannon,"attr(survey_shannon, \"plot_files\") <- list(
+          `mf_MAB` = \"macrofauna_MAB.Rmd-survey-shannon.R\",
+`mf_NE` = \"macrofauna_NE.Rmd-survey-shannon.R\")"
+wcr,"attr(wcr, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-wcr.R\")"
+wind_dev_speed,"attr(wind_dev_speed, \"plot_files\") <- list(
+          `hd_MAB_0` = \"human_dimensions_MAB.Rmd-wind-dev-speed0.R\",
+`hd_MAB_0.30` = \"human_dimensions_MAB.Rmd-wind-dev-speed0.30.R\")"
+wind_occupancy,"attr(wind_occupancy, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-wind-occupancy.R\")"
+wind_revenue,"attr(wind_revenue, \"plot_files\") <- list(
+          `hd_MAB` = \"human_dimensions_MAB.Rmd-wind-revenue.R\",
+`hd_NE` = \"human_dimensions_NE.Rmd-wind-revenue.R\")"
+zoo_abund,"attr(zoo_abund, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-zoo-abund.R\",
+`ltl_NE` = \"LTL_NE.Rmd-zoo-abund.R\")"
+zoo_diversity,"attr(zoo_diversity, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-zoo-diversity.R\",
+`ltl_NE` = \"LTL_NE.Rmd-zoo-diversity.R\",
+`ltl_NE_gb` = \"LTL_NE.Rmd-zoo-diversity-gb.R\",
+`ltl_NE_gom` = \"LTL_NE.Rmd-zoo-diversity-gom.R\")"
+zoo_sli_anom,"attr(zoo_sli_anom, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-zoo-sli-anom.R\")"
+zoo_strat_abun,"attr(zoo_strat_abun, \"plot_files\") <- list(
+          `ltl_MAB` = \"LTL_MAB.Rmd-zoo-strat-abun.R\",
+`ltl_NE` = \"LTL_NE.Rmd-zoo-strat-abun.R\")"
