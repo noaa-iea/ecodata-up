@@ -16,6 +16,7 @@ shelf(
   ggiraph,
   ggplot2,
   ggrepel,
+  ggspatial, # plot aquaculture
   glue,
   grid,
   heatwaveR,
@@ -24,6 +25,7 @@ shelf(
   kableExtra,
   knitr,
   magrittr,
+  marmap, # plot aquaculture
   nlme,
   patchwork,
   purrr,

@@ -50,9 +50,18 @@ server <- function(input, output, session) {
     #dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
     #dataset_files <- dataset$data_files %>% unlist()
     
-    files_dest <- glue("{values$dir_ecodata_branch}/data-raw/{file_input()$name}")
+    #browser()
+    #files_dest <- glue("{values$dir_ecodata_branch}/data-raw/{file_input()$name}")
+    files_dest <- glue("{values$dir_ecodata_branch}/data-raw/{input$inFile$name}")
     
-    file_move(file_input()$datapath, files_dest)
+    #file_move(file_input()$datapath, files_dest)
+    # fs::file_delete("/share/github/ecodata_edab_ben@ecoquants.com_aquaculture/data-raw/Aquaculture.edited.xlsx")
+    stopifnot(all(file.exists(input$inFile$datapath)))
+    stopifnot(all(dir.exists(dirname(files_dest))))
+    message("load_data(): about to copy files")
+    file.remove(files_dest)
+    stopifnot(all(!file.exists(files_dest)))
+    file.copy(input$inFile$datapath, files_dest)
     walk(files_dest, chmod, mode = "775")
     
     message(glue('Sys.info()[["effective_user"]]: {Sys.info()[["effective_user"]]}'))
@@ -318,7 +327,7 @@ server <- function(input, output, session) {
       is_files  <- ifelse(length(files) > 1, T, F)
       
       # TODO: handle RData, like blue_runner: data-raw/Blue_runner_presence.RData
-      file1_csv <- glue("{values$dir_ecodata_branch}/data-raw/{files[1]}")
+      file1 <- glue("{values$dir_ecodata_branch}/data-raw/{files[1]}")
       
       file_url_pfx <- "https://github.com/NOAA-EDAB/ecodata/blob/master/data-raw"
       file_links   <- lapply(files, function(f) a(f, href = glue("{file_url_pfx}/{f}"), target="_blank")) %>% tagList()
@@ -328,7 +337,7 @@ server <- function(input, output, session) {
         glue("Please upload the following {length(files)} {ifelse(is_files, 'files', 'file')} (or as sheets without the '.csv' in an Excel file):"), file_links, ".", br(), br(),
         
         # TODO: ch_bay_sal: SR_Salinity.csv has no headers so 
-        preview_csv(file1_csv, is_files),br(),br(),
+        preview_tbl(file1, is_files),br(),br(),
         
         "These files will be processed with the following:",
         get_Rfiles(dataset))
@@ -364,14 +373,16 @@ server <- function(input, output, session) {
     
     # validate uploaded files ----
     
-    # browser()
+    #browser()
     #dataset_files <- str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()
     data_files <- dataset$data_files %>% unlist()
     
     message(glue("in output$figs about to validate"))
     
-    missing_files <- setdiff(data_files, file_input()$name) %>% paste(collapse = ", ")
-    extra_files   <- setdiff(file_input()$name, data_files) %>% paste(collapse = ", ")
+    #missing_files <- setdiff(data_files, file_input()$name) %>% paste(collapse = ", ")
+    #extra_files   <- setdiff(file_input()$name, data_files) %>% paste(collapse = ", ")
+    missing_files <- setdiff(data_files, input$inFile$name) %>% paste(collapse = ", ")
+    extra_files   <- setdiff(input$inFile$name, data_files) %>% paste(collapse = ", ")
     
     validate(
       need(
@@ -386,6 +397,7 @@ server <- function(input, output, session) {
     )
     
     # validate uploaded fields ----
+    #browser()
     d_files <- tibble(
       # dfile = str_split(dataset$dataset_files, ", ", simplify = T) %>% as.vector()) %>% 
       dfile = data_files) %>% 
@@ -395,7 +407,8 @@ server <- function(input, output, session) {
       get_flds_type()
     
     # browser()
-    u_files <- file_input() %>% 
+    #u_files <- file_input() %>% 
+    u_files <- input$inFile %>% 
       as_tibble() %>% 
       select(dfile = name, path = datapath) %>% 
       mutate(
@@ -403,25 +416,26 @@ server <- function(input, output, session) {
       get_flds_type()
     #u_files
     
+    #browser()
     du_files <- d_files %>% 
       full_join(
         u_files, 
-        by = c("dfile", "flds_type")) %>% 
-      arrange(dfile, fld_dataset, flds_type, fld_upload) %>% 
-      select(dfile, flds_type, fld_dataset, fld_upload) %>% 
+        by = c("dfile", "sheet", "fld_type")) %>% 
+      arrange(dfile, sheet, fld_dataset, fld_type, fld_upload) %>% 
+      select(dfile, sheet, fld_type, fld_dataset, fld_upload) %>% 
       filter(is.na(fld_dataset) | is.na(fld_upload)) %>% 
-      group_by(dfile) %>% 
+      group_by(dfile, sheet) %>% 
       nest(data = -dfile) %>% 
       mutate(
         str_flds_missing = map_chr(data, function(d){
           d %>% 
             filter(fld_dataset) %>% 
-            pull(flds_type) %>% 
+            pull(fld_type) %>% 
             paste(collapse = ", ")}),
         str_flds_extra = map_chr(data, function(d){
           d %>% 
             filter(fld_upload) %>% 
-            pull(flds_type) %>% 
+            pull(fld_type) %>% 
             paste(collapse = ", ")})) %>% 
       select(-data) %>% 
       filter(nchar(str_flds_missing) > 0) %>% 
@@ -542,6 +556,9 @@ server <- function(input, output, session) {
   
   # output$uiSubmitted ----
   output$uiSubmitted <- renderUI({
+    
+    req(values$submit_success, values$pull_request)
+    
     if (!values$submit_success | is.na(values$pull_request))
       return(tagList())
 

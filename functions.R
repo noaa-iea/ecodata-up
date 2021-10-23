@@ -97,16 +97,44 @@ sanitize_comments <- function(txt){
 
 
 get_flds_type <- function(tbl_paths){
-  tbl_paths %>% 
-    mutate(
-      data = map(path, function(x) read_csv(x)),
-      flds_type = map(data, function(x){
-        flds  <- names(x)
-        types <- sapply(x, class)
-        glue("{flds} <{types}>")
-      })) %>% 
-    select(-data, -path) %>% 
-    unnest(flds_type)
+  
+  has_csv <- any(fs::path_ext(tbl_paths$path) == "csv")
+  has_xl  <- any(fs::path_ext(tbl_paths$path) %in% c("xls", "xlsx"))
+  # TODO: handle if has both csv & xl
+  
+  if (has_csv){
+    tbl_flds <- tbl_paths %>% 
+      filter(fs::path_ext(path) == "csv") %>% 
+      mutate(
+        data = map(path, function(x) read_csv(x)),
+        sheet = NA,
+        fld_type = map(data, function(x){
+          flds  <- names(x)
+          types <- sapply(x, class)
+          glue("{flds} <{types}>")
+        })) %>% 
+      select(-data, -path) %>% 
+      unnest(fld_type)
+  }
+  
+  if (has_xl){
+    tbl_flds <- tbl_paths %>% 
+      filter(fs::path_ext(path) %in% c("xls","xlsx")) %>% 
+      mutate(
+        # type  = "xl",
+        sheet = map(path, function(x) excel_sheets(x))) %>% 
+      unnest(sheet) %>% 
+      mutate(
+        data = map2(path, sheet, function(x, y) read_excel(x, y)),
+        fld_type = map(data, function(x){
+          flds  <- names(x)
+          types <- sapply(x, class)
+          glue("{flds} <{types}>")
+        })) %>% 
+      select(-data, -path) %>% 
+      unnest(fld_type)
+  }
+  tbl_flds
 }
 
 get_Rfiles <- function(dataset){
@@ -133,12 +161,38 @@ get_Rfiles <- function(dataset){
       HTML())
 }
 
+preview_tbl <- function(file1, is_files){
+  if (fs::path_ext(file1) == "csv")
+    return(preview_csv(file1, is_files))
+  # otherwise assume Excel spreadsheet
+  if (fs::path_ext(file1) %in% c("xls","xlsx"))
+    return(preview_xl(file1, is_files))
+  
+  stop(glue("Sorry, the Uploader does not yet handle {fs::path_ext(file1)} file extensions (only csv, xls or xlsx)."))
+}
+  
 preview_csv <- function(file1_csv, is_files){
   if (!file.exists(file1_csv)) return("")
   tagList(
     ifelse(is_files, "They", "It"), "should have header names and values like",
     ifelse(is_files, glue("this ({basename(file1_csv)}):"), "this:"), br(),
     read_csv(file1_csv) %>% head() %>% kable(table.attr = "class='kable'") %>% HTML())
+}
+
+preview_xl <- function(file1_xl, is_files){
+  if (!file.exists(file1_xl)) return("")
+  #browser()
+  tagList(
+    ifelse(is_files, "They", "It"), "should have sheets named:", 
+    # paste(HTML(strong(readxl::excel_sheets(file1_xl))), collapse = ", "), br(),
+    # sapply(, strong)
+    # tags$ul(
+    #   purrr::map(warns, function(.x) tags$li(.x)))
+    tags$ul(
+      purrr::map(readxl::excel_sheets(file1_xl), function(.x) tags$li(strong(.x)))), br(),
+    "with header names and values like",
+    ifelse(is_files, glue("this ({basename(file1_xl)}):"), "this:"), br(),
+    read_excel(file1_xl) %>% head() %>% kable(table.attr = "class='kable'") %>% HTML())
 }
 
 plot_chunk_to_tab_panel <- function(
